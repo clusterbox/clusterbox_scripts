@@ -7,15 +7,13 @@
 #https://zackreed.me/docker-how-and-why-i-use-it/
 
 USER=braddavis
-MOUNT=false
-FIRSTRUN=false
+KEEPMOUNTS=false
 ENCRYPTEDMOVIEFOLDER=IepOejn11g4nP5JHvRa6GShx
 ENCRYPTEDTVFOLDER=jCAtPeFmvjtPrlSeYLx5G2kd
 
-while getopts ':m:f:' opts; do
+while getopts ':k' opts; do
     case "${opts}" in
-        m) MOUNT=$OPTARG ;;
-        f) FIRSTRUN=$OPTARG ;;
+        k) KEEPMOUNTS=$OPTARG ;;
     esac
 done
 
@@ -55,7 +53,7 @@ sudo groupadd docker
 sudo usermod -aG docker $USER
 
 
-if [ "$MOUNT" = true ] ; then
+if [ "$KEEPMOUNTS" = false ] ; then
     /bin/bash /home/$USER/scripts/mount.sh
 fi
 
