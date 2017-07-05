@@ -83,6 +83,7 @@ docker rm -fv organizr; docker run -d \
 --link plexpy:plexpy \
 --link nzbget:nzbget \
 --link ombi:ombi \
+--link logio:logio \
 -v /docker/containers/organizr/config:/config \
 -e PGID=1002 -e PUID=1003  \
 -p 80:80 \
@@ -199,6 +200,50 @@ docker rm -fv watchtower; docker run -d \
 --name watchtower \
 -v /var/run/docker.sock:/var/run/docker.sock \
 v2tec/watchtower --interval 60 --cleanup
+
+
+echo "Starting Log.io..."
+docker rm -fv logio; docker run -d \
+-p 28778:28778 \
+-e "LOGIO_ADMIN_USER=clusterbox" \
+-e "LOGIO_ADMIN_PASSWORD=4letterword" \
+--name logio \
+blacklabelops/logio
+
+
+echo "Starting Log.io Harvester..."
+docker rm -fv harvester; docker run -d \
+-v /var/lib/docker/containers:/var/lib/docker/containers \
+-e "LOGIO_HARVESTER1STREAMNAME=docker" \
+    -e "LOGIO_HARVESTER1LOGSTREAMS=/var/lib/docker/containers" \
+    -e "LOGIO_HARVESTER1FILEPATTERN=*-json.log" \
+-v /docker:/docker \
+-e "LOGIO_HARVESTER2STREAMNAME=ombi" \
+    -e "LOGIO_HARVESTER2LOGSTREAMS=/docker/containers/ombi/config/logs" \
+    -e "LOGIO_HARVESTER2FILEPATTERN=*.log" \
+-e "LOGIO_HARVESTER3STREAMNAME=nzbGet_downloads" \
+    -e "LOGIO_HARVESTER3LOGSTREAMS=/docker/downloads" \
+    -e "LOGIO_HARVESTER3FILEPATTERN=*.log" \
+-e "LOGIO_HARVESTER4STREAMNAME=organizr" \
+    -e "LOGIO_HARVESTER4LOGSTREAMS=/docker/containers/organizr" \
+    -e "LOGIO_HARVESTER4FILEPATTERN=*.log" \
+-e "LOGIO_HARVESTER5STREAMNAME=plex" \
+    -e "LOGIO_HARVESTER5LOGSTREAMS=/docker/containers/plex" \
+    -e "LOGIO_HARVESTER5FILEPATTERN=*.log" \
+-e "LOGIO_HARVESTER5STREAMNAME=plexpy" \
+    -e "LOGIO_HARVESTER5LOGSTREAMS=/docker/containers/plexpy" \
+    -e "LOGIO_HARVESTER5FILEPATTERN=*.log" \
+-e "LOGIO_HARVESTER6STREAMNAME=radarr" \
+    -e "LOGIO_HARVESTER6LOGSTREAMS=/docker/containers/radarr" \
+    -e "LOGIO_HARVESTER6FILEPATTERN=*.log *.txt" \
+-e "LOGIO_HARVESTER7STREAMNAME=sonarr" \
+    -e "LOGIO_HARVESTER7LOGSTREAMS=/docker/containers/sonarr" \
+    -e "LOGIO_HARVESTER7FILEPATTERN=*.log *.txt" \
+--link logio:logio \
+--name harvester \
+--user root \
+blacklabelops/logio harvester
+
 
 
 echo "******** ClusterBox Build Complete ********"
