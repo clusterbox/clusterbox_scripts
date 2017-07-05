@@ -66,9 +66,10 @@ sudo mkdir -p /docker/containers/plexpy/config
 sudo mkdir -p /docker/containers/portainer/config
 sudo mkdir -p /docker/containers/radarr/config
 sudo mkdir -p /docker/containers/sonarr/config
-sudo mkdir -p /docker/containers/muximux/config
 sudo mkdir -p /docker/containers/organizr/config
 sudo mkdir -p /docker/containers/ombi/config
+sudo mkdir -p /docker/containers/rclone.tv/config
+sudo mkdir -p /docker/containers/rclone.movie/config
 sudo mkdir -p /docker/downloads/completed/movies
 sudo mkdir -p /docker/downloads/completed/tv
 sudo chown -R $USER:$USER /docker
@@ -138,8 +139,8 @@ docker rm -fv rclone.movie; docker run -d \
 -e SYNC_DESTINATION_SUBPATH=braddavis/$ENCRYPTEDMOVIEFOLDER \
 -v /home/$USER/.local/$ENCRYPTEDMOVIEFOLDER:/data \
 -v /home/braddavis/local/movies:/media \
--v /home/$USER/config/rclone:/config \
--e SYNC_COMMAND="rclone move -v /data/ gdrive:$USER/$ENCRYPTEDMOVIEFOLDER --size-only --config=/config/rclone.conf  --log-file=/app/rclone.log" \
+-v /docker/containers/rclone.movie/config:/config \
+-e SYNC_COMMAND="rclone move -v /data/ gdrive:$USER/$ENCRYPTEDMOVIEFOLDER --size-only --config=/config/rclone.conf  --log-file=/config/rclone.log" \
 that1guy/docker-rclone
 
 
@@ -165,8 +166,8 @@ docker rm -fv rclone.tv; docker run -d \
 -e SYNC_DESTINATION_SUBPATH=braddavis/$ENCRYPTEDTVFOLDER \
 -v /home/$USER/.local/$ENCRYPTEDTVFOLDER:/data \
 -v /home/braddavis/local/tv:/media \
--v /home/$USER/config/rclone:/config \
--e SYNC_COMMAND="rclone move -v /data/ gdrive:$USER/$ENCRYPTEDTVFOLDER --size-only --config=/config/rclone.conf  --log-file=/app/rclone.log" \
+-v /docker/containers/rclone.tv/config:/config \
+-e SYNC_COMMAND="rclone move -v /data/ gdrive:$USER/$ENCRYPTEDTVFOLDER --size-only --config=/config/rclone.conf  --log-file=/config/rclone.log" \
 that1guy/docker-rclone
 
 
@@ -239,11 +240,16 @@ docker rm -fv harvester; docker run -d \
 -e "LOGIO_HARVESTER7STREAMNAME=sonarr" \
     -e "LOGIO_HARVESTER7LOGSTREAMS=/docker/containers/sonarr" \
     -e "LOGIO_HARVESTER7FILEPATTERN=*.log *.txt" \
+-e "LOGIO_HARVESTER8STREAMNAME=rclone.tv" \
+    -e "LOGIO_HARVESTER8LOGSTREAMS=/docker/containers/rclone.tv" \
+    -e "LOGIO_HARVESTER8FILEPATTERN=*.log" \
+-e "LOGIO_HARVESTER9STREAMNAME=rclone.tv" \
+    -e "LOGIO_HARVESTER9LOGSTREAMS=/docker/containers/rclone.movie" \
+    -e "LOGIO_HARVESTER9FILEPATTERN=*.log" \
 --link logio:logio \
 --name harvester \
 --user root \
 blacklabelops/logio harvester
-
 
 
 echo "******** ClusterBox Build Complete ********"
