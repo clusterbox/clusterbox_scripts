@@ -67,19 +67,26 @@ sudo mkdir -p /docker/containers/portainer/config
 sudo mkdir -p /docker/containers/radarr/config
 sudo mkdir -p /docker/containers/sonarr/config
 sudo mkdir -p /docker/containers/muximux/config
+sudo mkdir -p /docker/containers/organizr/config
+sudo mkdir -p /docker/containers/ombi/config
 sudo mkdir -p /docker/downloads/completed/movies
 sudo mkdir -p /docker/downloads/completed/tv
 sudo chown -R $USER:$USER /docker
 
 
-echo "Starting Muximux Container..."
-docker rm -fv muximux; docker run -d \
---name=muximux \
+echo "Starting Organizr..."
+docker rm -fv organizr; docker run -d \
+--name=organizr \
+--link sonarr:sonarr \
+--link radarr:radarr \
+--link portainer:portainer \
+--link plexpy:plexpy \
+--link nzbget:nzbget \
+--link ombi:ombi \
+-v /docker/containers/organizr/config:/config \
+-e PGID=1002 -e PUID=1003  \
 -p 80:80 \
--p 443:443 \
--v /docker/containers/muximux/config:/config \
-linuxserver/muximux
-
+lsiocommunity/organizr
 
 echo "Starting NZBget Container..."
 docker rm -fv nzbget; docker run -d \
@@ -176,6 +183,16 @@ docker rm -fv sonarr; docker run -d \
 linuxserver/sonarr
 
 
+echo "Starting Ombi..."
+docker rm -fv ombi; docker run -d \
+--name=ombi \
+-v /etc/localtime:/etc/localtime:ro \
+-v /docker/containers/ombi/config:/config \
+-e PGID=1002 -e PUID=1003  \
+-e TZ="America/Los Angeles" \
+-p 3579:3579 \
+linuxserver/ombi
+
 
 echo "Starting Watchtower..."
 docker rm -fv watchtower; docker run -d \
@@ -184,7 +201,7 @@ docker rm -fv watchtower; docker run -d \
 v2tec/watchtower --interval 60 --cleanup
 
 
-echo "ClusterBox Built!!!"
+echo "******** ClusterBox Build Complete ********"
 
 exit
 
