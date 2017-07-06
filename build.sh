@@ -79,22 +79,6 @@ sudo mkdir -p /docker/downloads/completed/tv
 sudo chown -R $USER:$USER /docker
 
 
-echo "Starting Organizr..."
-docker rm -fv organizr; docker run -d \
---name=organizr \
---link sonarr:sonarr \
---link radarr:radarr \
---link portainer:portainer \
---link plexpy:plexpy \
---link nzbget:nzbget \
---link ombi:ombi \
---link logio:logio \
---link term:term \
--v /docker/containers/organizr/config:/config \
--e PGID=1002 -e PUID=1003  \
--p 80:80 \
-lsiocommunity/organizr
-
 echo "Starting NZBget Container..."
 docker rm -fv nzbget; docker run -d \
 --name nzbget \
@@ -262,6 +246,23 @@ docker rm -fv term; docker run -d \
 --name term \
 -p 3000 \
 -dt krishnasrinivas/wetty
+
+
+echo "Starting Organizr..."
+docker rm -fv organizr; docker run -d \
+--name=organizr \
+--link sonarr:sonarr \
+--link radarr:radarr \
+--link portainer:portainer \
+--link plexpy:plexpy \
+--link nzbget:nzbget \
+--link ombi:ombi \
+--link logio:logio \
+--link term:term \
+-v /docker/containers/organizr/config:/config \
+-e PGID=1002 -e PUID=1003  \
+-p 80:80 \
+lsiocommunity/organizr
 
 
 echo "******** ClusterBox Build Complete ********"
