@@ -57,6 +57,10 @@ if [ "$KEEPMOUNTS" = false ] ; then
     /bin/bash /home/$USER/scripts/mount.sh
 fi
 
+echo "Stopping and removing all docker containers..."
+docker stop $(docker ps -a -q)
+docker rm $(docker ps -a -q)
+
 
 echo "Creating docker container folder structures..."
 sudo mkdir -p /docker/containers/nzbget/config
@@ -85,6 +89,7 @@ docker rm -fv organizr; docker run -d \
 --link nzbget:nzbget \
 --link ombi:ombi \
 --link logio:logio \
+--link term:term \
 -v /docker/containers/organizr/config:/config \
 -e PGID=1002 -e PUID=1003  \
 -p 80:80 \
@@ -251,6 +256,12 @@ docker rm -fv harvester; docker run -d \
 --name harvester \
 --user root \
 blacklabelops/logio harvester
+
+echo "Starting Wetty Terminal..."
+docker rm -fv term; docker run -d \
+--name term \
+-p 3000 \
+-dt krishnasrinivas/wetty
 
 
 echo "******** ClusterBox Build Complete ********"
