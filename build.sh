@@ -177,6 +177,8 @@ linuxserver/sonarr
 echo "Starting Ombi..."
 docker rm -fv ombi; docker run -d \
 --name=ombi \
+--link radarr:radarr \
+--link sonarr:sonarr \
 -v /etc/localtime:/etc/localtime:ro \
 -v /docker/containers/ombi/config:/config \
 -e PGID=1002 -e PUID=1003  \
