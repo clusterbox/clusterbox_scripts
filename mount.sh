@@ -5,12 +5,22 @@ USER=braddavis
 #Unmount any directories already mounted
 echo "mount.sh:  Unmounting all rsync and encrypted directories..."
 /bin/fusermount -uz /home/$USER/gdrive
-/bin/fusermount -uz /home/$USER/.gdrive
-/bin/fusermount -uz /home/$USER/local
-/bin/fusermount -uz /storage
+umount -l /home/$USER/gdrive
 
-echo "Wating 5s..."
-sleep 5s
+/bin/fusermount -uz /home/$USER/.gdrive
+umount -l /home/$USER/.gdrive
+
+/bin/fusermount -uz /home/$USER/local
+umount -l /home/$USER/local
+
+/bin/fusermount -uz /home/$USER/.local
+umount -l /home/$USER/.local
+
+/bin/fusermount -uz /storage
+umount -l /storage
+
+echo "Wating 10s..."
+sleep 10s
 
 #Create folder structure where necessary
 echo "mount.sh:  Creating all necessary folder structures..."
@@ -24,8 +34,8 @@ mkdir -p /home/$USER/local
 sudo mkdir -p /storage
 sudo chown -R $USER:$USER /storage
 
-echo "Wating 5s..."
-sleep 5s
+echo "Wating 10s..."
+sleep 10s
 
 #Mount gdrive using rClone
 echo "mount.sh:  Initializing rClone..."
@@ -39,15 +49,15 @@ echo "mount.sh:  Encrypting all hidden directories..."
 ENCFS6_CONFIG='/home/'$USER'/encfs/encfs.xml' encfs -o allow_other --extpass="cat /home/"$USER"/encfs/encfspass" /home/$USER/.gdrive /home/$USER/gdrive
 ENCFS6_CONFIG='/home/'$USER'/encfs/encfs.xml' encfs -o allow_other --extpass="cat /home/"$USER"/encfs/encfspass" /home/$USER/.local /home/$USER/local
  
-echo "Wating 5s..."
-sleep 5s
+echo "Wating 10s..."
+sleep 10s
 
 #Use union-fs to merge our remote and local directories
 echo "mount.sh:  Merging all directories with UnionFS..."
 unionfs-fuse -o cow,allow_other /home/$USER/local=RW:/home/$USER/gdrive=RO /storage/
 
-echo "Wating 5s..."
-sleep 5s
+echo "Wating 10s..."
+sleep 10s
 
 echo "mount.sh:  Creating all necessary subdirectories in /local..."
 mkdir -p /home/$USER/local/tv
