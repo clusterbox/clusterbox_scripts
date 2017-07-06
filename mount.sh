@@ -4,20 +4,20 @@ USER=braddavis
 
 #Unmount any directories already mounted
 echo "mount.sh:  Unmounting all rsync and encrypted directories..."
-/bin/fusermount -uz /home/$USER/gdrive
-umount -l /home/$USER/gdrive
+sudo /bin/fusermount -uz /home/$USER/gdrive
+sudo umount -l /home/$USER/gdrive
 
-/bin/fusermount -uz /home/$USER/.gdrive
-umount -l /home/$USER/.gdrive
+sudo /bin/fusermount -uz /home/$USER/.gdrive
+sudo umount -l /home/$USER/.gdrive
 
-/bin/fusermount -uz /home/$USER/local
-umount -l /home/$USER/local
+sudo /bin/fusermount -uz /home/$USER/local
+sudo umount -l /home/$USER/local
 
-/bin/fusermount -uz /home/$USER/.local
-umount -l /home/$USER/.local
+sudo /bin/fusermount -uz /home/$USER/.local
+sudo umount -l /home/$USER/.local
 
-/bin/fusermount -uz /storage
-umount -l /storage
+sudo /bin/fusermount -uz /storage
+sudo umount -l /storage
 
 echo "Wating 10s..."
 sleep 10s
@@ -28,7 +28,7 @@ mkdir -p /home/$USER/.gdrive
 mkdir -p /home/$USER/gdrive
 mkdir -p /home/$USER/.local
 
-rm -rf /home/$USER/local
+sudo rm -rf /home/$USER/local
 mkdir -p /home/$USER/local
 
 sudo mkdir -p /storage
