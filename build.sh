@@ -204,9 +204,9 @@ blacklabelops/logio
 
 
 echo "Starting Log.io Harvester..."
---restart="always" \
 docker rm -fv harvester; docker run -d \
 -v /var/lib/docker/containers:/var/lib/docker/containers \
+--restart="always" \
 -e "LOGIO_HARVESTER1STREAMNAME=docker" \
     -e "LOGIO_HARVESTER1LOGSTREAMS=/var/lib/docker/containers" \
     -e "LOGIO_HARVESTER1FILEPATTERN=*-json.log" \
