@@ -216,24 +216,25 @@ docker rm -fv harvester; docker run -d \
     -e "LOGIO_HARVESTER4FILEPATTERN=*.log" \
 -e "LOGIO_HARVESTER5STREAMNAME=plex" \
     -e "LOGIO_HARVESTER5LOGSTREAMS=/docker/containers/plex" \
-    -e "LOGIO_HARVESTER5FILEPATTERN=*.log" \
--e "LOGIO_HARVESTER5STREAMNAME=plexpy" \
-    -e "LOGIO_HARVESTER5LOGSTREAMS=/docker/containers/plexpy" \
-    -e "LOGIO_HARVESTER5FILEPATTERN=*.log" \
--e "LOGIO_HARVESTER6STREAMNAME=radarr" \
-    -e "LOGIO_HARVESTER6LOGSTREAMS=/docker/containers/radarr" \
-    -e "LOGIO_HARVESTER6FILEPATTERN=*.log *.txt" \
--e "LOGIO_HARVESTER7STREAMNAME=sonarr" \
-    -e "LOGIO_HARVESTER7LOGSTREAMS=/docker/containers/sonarr" \
+    -e "LOGIO_HARVESTER5FILEPATTERN=*.log *.txt" \
+-e "LOGIO_HARVESTER6STREAMNAME=plexpy" \
+    -e "LOGIO_HARVESTER6LOGSTREAMS=/docker/containers/plexpy" \
+    -e "LOGIO_HARVESTER6FILEPATTERN=*.log" \
+-e "LOGIO_HARVESTER7STREAMNAME=radarr" \
+    -e "LOGIO_HARVESTER7LOGSTREAMS=/docker/containers/radarr" \
     -e "LOGIO_HARVESTER7FILEPATTERN=*.log *.txt" \
+-e "LOGIO_HARVESTER8STREAMNAME=sonarr" \
+    -e "LOGIO_HARVESTER8LOGSTREAMS=/docker/containers/sonarr" \
+    -e "LOGIO_HARVESTER8FILEPATTERN=*.log *.txt" \
 -v /home/$USER/rclone_config:/rclone_config \
--e "LOGIO_HARVESTER8STREAMNAME=rclone" \
-    -e "LOGIO_HARVESTER8LOGSTREAMS=/rclone_config" \
-    -e "LOGIO_HARVESTER8FILEPATTERN=*.log" \
+-e "LOGIO_HARVESTER9STREAMNAME=rclone" \
+    -e "LOGIO_HARVESTER9LOGSTREAMS=/rclone_config" \
+    -e "LOGIO_HARVESTER9FILEPATTERN=*.log" \
 --link logio:logio \
 --name harvester \
 --user root \
 blacklabelops/logio harvester
+
 
 echo "Starting Wetty Terminal..."
 docker rm -fv term; docker run -d \
