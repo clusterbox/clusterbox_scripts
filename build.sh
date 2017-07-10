@@ -72,8 +72,6 @@ sudo mkdir -p /docker/containers/radarr/config
 sudo mkdir -p /docker/containers/sonarr/config
 sudo mkdir -p /docker/containers/organizr/config
 sudo mkdir -p /docker/containers/ombi/config
-sudo mkdir -p /docker/containers/rclonetv/config
-sudo mkdir -p /docker/containers/rclonemovie/config
 sudo mkdir -p /docker/downloads/completed/movies
 sudo mkdir -p /docker/downloads/completed/tv
 sudo chown -R $USER:$USER /docker
@@ -124,12 +122,10 @@ echo "Starting rclone.movie Container..."
 docker rm -fv rclone.movie; docker run -d \
 --name=rclone.movie \
 -p 8081:8080 \
--e SYNC_DESTINATION=gdrive \
--e SYNC_DESTINATION_SUBPATH=braddavis/$ENCRYPTEDMOVIEFOLDER \
 -v /home/$USER/.local/$ENCRYPTEDMOVIEFOLDER:/data \
--v /home/braddavis/local/movies:/media \
--v /docker/containers/rclonemovie/config:/config \
--e SYNC_COMMAND="rclone move -v /data/ gdrive:$USER/$ENCRYPTEDMOVIEFOLDER --size-only --config=/config/rclone.conf  --log-file=/config/rclone.log" \
+-v /home/$USER/local/movies:/media \
+-v /home/$USER/rclone_config:/config \
+-e SYNC_COMMAND="rclone copy -v /data/ gdrive_clusterbox:$USER/$ENCRYPTEDMOVIEFOLDER --size-only --config=/config/rclone.conf  --log-file=/config/rclone_movie_clusterbox.log && rclone move -v /data/ gdrive_unlimited:$USER/$ENCRYPTEDMOVIEFOLDER --size-only --config=/config/rclone.conf  --log-file=/config/rclone_movie_unlimited.log" \
 that1guy/docker-rclone
 
 
@@ -151,12 +147,10 @@ echo "Starting rclone.tv Container..."
 docker rm -fv rclone.tv; docker run -d \
 --name=rclone.tv \
 -p 8082:8080 \
--e SYNC_DESTINATION=gdrive \
--e SYNC_DESTINATION_SUBPATH=braddavis/$ENCRYPTEDTVFOLDER \
 -v /home/$USER/.local/$ENCRYPTEDTVFOLDER:/data \
--v /home/braddavis/local/tv:/media \
--v /docker/containers/rclonetv/config:/config \
--e SYNC_COMMAND="rclone move -v /data/ gdrive:$USER/$ENCRYPTEDTVFOLDER --size-only --config=/config/rclone.conf  --log-file=/config/rclone.log" \
+-v /home/$USER/local/tv:/media \
+-v /home/$USER/rclone_config:/config \
+-e SYNC_COMMAND="rclone copy -v /data/ gdrive_clusterbox:$USER/$ENCRYPTEDTVFOLDER --size-only --config=/config/rclone.conf  --log-file=/config/rclone_tv_clusterbox.log && rclone move -v /data/ gdrive_unlimited:$USER/$ENCRYPTEDTVFOLDER --size-only --config=/config/rclone.conf  --log-file=/config/rclone_tv_unlimited.log" \
 that1guy/docker-rclone
 
 
@@ -232,12 +226,10 @@ docker rm -fv harvester; docker run -d \
 -e "LOGIO_HARVESTER7STREAMNAME=sonarr" \
     -e "LOGIO_HARVESTER7LOGSTREAMS=/docker/containers/sonarr" \
     -e "LOGIO_HARVESTER7FILEPATTERN=*.log *.txt" \
--e "LOGIO_HARVESTER8STREAMNAME=rclonetv" \
-    -e "LOGIO_HARVESTER8LOGSTREAMS=/docker/containers/rclonetv" \
+-v /home/$USER/rclone_config:/rclone_config \
+-e "LOGIO_HARVESTER8STREAMNAME=rclone" \
+    -e "LOGIO_HARVESTER8LOGSTREAMS=/rclone_config" \
     -e "LOGIO_HARVESTER8FILEPATTERN=*.log" \
--e "LOGIO_HARVESTER9STREAMNAME=rclonemovie" \
-    -e "LOGIO_HARVESTER9LOGSTREAMS=/docker/containers/rclonemovie" \
-    -e "LOGIO_HARVESTER9FILEPATTERN=*.log" \
 --link logio:logio \
 --name harvester \
 --user root \
