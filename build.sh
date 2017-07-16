@@ -72,6 +72,10 @@ sudo mkdir -p /docker/containers/radarr/config
 sudo mkdir -p /docker/containers/sonarr/config
 sudo mkdir -p /docker/containers/organizr/config
 sudo mkdir -p /docker/containers/ombi/config
+sudo mkdir -p /docker/containers/jacket/config
+sudo mkdir -p /docker/containers/jacket/blackhole
+sudo mkdir -p /docker/containers/tranmission/config
+sudo mkdir -p /docker/containers/transmission/data
 sudo mkdir -p /docker/downloads/completed/movies
 sudo mkdir -p /docker/downloads/completed/tv
 sudo chown -R $USER:$USER /docker
@@ -118,6 +122,32 @@ docker rm -fv portainer; docker run -d \
 -v /var/run/docker.sock:/var/run/docker.sock portainer/portainer
 
 
+echo "Starting Jackett..."
+docker rm -fv jackett; docker run -d \
+--name=jackett \
+-v /docker/containers/jackett/config:/config \
+-v /docker/containers/jackett/blackhole:/downloads \
+-e PGID=1002 \
+-e PUID=1003 \
+-e TZ="America/Los Angeles" \
+-v /etc/localtime:/etc/localtime:ro \
+-p 9117:9117 \
+linuxserver/jackett
+
+
+echo "Starting Transmission..."
+docker rm -fv transmission; docker run -d --cap-add=NET_ADMIN --device=/dev/net/tun -d \
+--name=transmission \
+--restart="always" \
+--dns 8.8.8.8 \
+--dns 8.8.8.4 \
+-v /docker/containers/transmission/data:/data \
+-v /etc/localtime:/etc/localtime:ro \
+--env-file /docker/containers/transmission/config/DockerEnv \
+-p 9091:9091 \
+haugene/transmission-openvpn
+
+
 echo "Starting rclone.movie Container..."
 docker rm -fv rclone.movie; docker run -d \
 --name=rclone.movie \
@@ -133,9 +163,11 @@ echo "Starting Radarr Container..."
 docker rm -fv radarr; docker run -d \
 --name=radarr \
 --link rclone.movie:rclone.movie \
+--link transmission:transmission \
 -v /docker/containers/radarr/config:/config \
 -v /storage:/storage \
 -v /docker/downloads:/downloads \
+-v /docker/containers/transmission/data:/data \
 -v /home/$USER/scripts:/scripts \
 -e PUID=1002 -e PGID=1003 \
 -e TZ="America/Los Angeles" \
@@ -158,12 +190,14 @@ echo "Starting Sonarr Container..."
 docker rm -fv sonarr; docker run -d \
 --name=sonarr \
 --link rclone.tv:rclone.tv \
+--link transmission:transmission \
 -p 8989:8989 \
 -e PUID=1002 -e PGID=1003 \
 -v /etc/localtime:/etc/localtime:ro \
 -v /docker/containers/sonarr/config:/config \
 -v /storage:/storage \
 -v /docker/downloads:/downloads \
+-v /docker/containers/transmission/data:/data \
 -v /home/$USER/scripts:/scripts \
 linuxserver/sonarr
 
@@ -254,6 +288,8 @@ docker rm -fv organizr; docker run -d \
 --link ombi:ombi \
 --link logio:logio \
 --link term:term \
+--link jackett:jackett \
+--link transmission:transmission \
 -v /docker/containers/organizr/config:/config \
 -e PGID=1002 -e PUID=1003  \
 -p 80:80 \

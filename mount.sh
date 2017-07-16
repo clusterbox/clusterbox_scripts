@@ -25,8 +25,8 @@ sudo umount -l /home/$USER/.local
 sudo /bin/fusermount -uz /storage
 sudo umount -l /storage
 
-echo "Wating 10s..."
-sleep 10s
+echo "Wating 3s...."
+sleep 3s
 
 #Create folder structure where necessary
 echo "mount.sh:  Creating all necessary folder structures..."
@@ -42,16 +42,19 @@ mkdir -p /home/$USER/local
 sudo mkdir -p /storage
 sudo chown -R $USER:$USER /storage
 
-echo "Wating 10s..."
-sleep 10s
+echo "Wating 3s...."
+sleep 3s
 
 #Mount gdrive using rClone
 echo "mount.sh:  Initializing rClone..."
-rclone mount gdrive_clusterbox:$USER /home/$USER/.gdrive_clusterbox &
-rclone mount gdrive_unlimited:$USER /home/$USER/.gdrive_unlimited &
+#sudo rclone mount -v gdrive_clusterbox:$USER /home/$USER/.gdrive_clusterbox --log-file=/home/braddavis/rclone_config/gdrive_clusterbox_mount.log &
+#sudo rclone mount -v gdrive_unlimited:$USER /home/$USER/.gdrive_unlimited --log-file=/home/braddavis/rclone_config/gdrive_unlimited_mount.log &
 
-echo "Wating 10s..."
-sleep 10s
+rclone mount -v gdrive_clusterbox:$USER /home/$USER/.gdrive_clusterbox &
+rclone mount -v gdrive_unlimited:$USER /home/$USER/.gdrive_unlimited &
+
+echo "Wating 3s...."
+sleep 3s
  
 #Mount encryption over these folders
 echo "mount.sh:  Encrypting all hidden directories..."
@@ -59,15 +62,16 @@ ENCFS6_CONFIG='/home/'$USER'/encfs/encfs.xml' encfs -o allow_other --extpass="ca
 ENCFS6_CONFIG='/home/'$USER'/encfs/encfs.xml' encfs -o allow_other --extpass="cat /home/"$USER"/encfs/encfspass" /home/$USER/.gdrive_unlimited /home/$USER/gdrive_unlimited
 ENCFS6_CONFIG='/home/'$USER'/encfs/encfs.xml' encfs -o allow_other --extpass="cat /home/"$USER"/encfs/encfspass" /home/$USER/.local /home/$USER/local
  
-echo "Wating 10s..."
-sleep 10s
+echo "Wating 3s...."
+sleep 3s
 
 #Use union-fs to merge our remote and local directories
 echo "mount.sh:  Merging all directories with UnionFS..."
 unionfs-fuse -o cow,allow_other /home/$USER/local=RW:/home/$USER/gdrive_clusterbox=RO:/home/$USER/gdrive_unlimited=RO /storage/
+#unionfs-fuse -o cow,allow_other /home/$USER/local=RW:/home/$USER/gdrive_unlimited=RO /storage/
 
-echo "Wating 10s..."
-sleep 10s
+echo "Wating 3s...."
+sleep 3s
 
 echo "mount.sh:  Creating all necessary subdirectories in /local..."
 mkdir -p /home/$USER/local/tv
