@@ -74,7 +74,7 @@ sudo mkdir -p /docker/containers/organizr/config
 sudo mkdir -p /docker/containers/ombi/config
 sudo mkdir -p /docker/containers/jacket/config
 sudo mkdir -p /docker/containers/jacket/blackhole
-sudo mkdir -p /docker/containers/tranmission/config
+sudo mkdir -p /docker/containers/transmission/config
 sudo mkdir -p /docker/containers/transmission/data
 sudo mkdir -p /docker/downloads/completed/movies
 sudo mkdir -p /docker/downloads/completed/tv
