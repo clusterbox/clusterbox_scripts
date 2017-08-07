@@ -96,6 +96,7 @@ echo "Starting Plex Container..."
 docker rm -fv plex; docker run -d \
 --name plex \
 --network=host \
+-e PLEX_UID=1002 -e PLEX_GID=1003 \
 -e TZ="America/Los Angeles" \
 -v /docker/containers/plex/config:/config \
 -v /docker/containers/plex/transcode:/transcode \
@@ -127,8 +128,7 @@ docker rm -fv jackett; docker run -d \
 --name=jackett \
 -v /docker/containers/jackett/config:/config \
 -v /docker/containers/jackett/blackhole:/downloads \
--e PGID=1002 \
--e PUID=1003 \
+-e PUID=1002 -e PGID=1003 \
 -e TZ="America/Los Angeles" \
 -v /etc/localtime:/etc/localtime:ro \
 -p 9117:9117 \
@@ -209,7 +209,7 @@ docker rm -fv ombi; docker run -d \
 --link sonarr:sonarr \
 -v /etc/localtime:/etc/localtime:ro \
 -v /docker/containers/ombi/config:/config \
--e PGID=1002 -e PUID=1003  \
+-e PUID=1002 -e PGID=1003 \
 -e TZ="America/Los Angeles" \
 -p 3579:3579 \
 linuxserver/ombi
@@ -291,7 +291,7 @@ docker rm -fv organizr; docker run -d \
 --link jackett:jackett \
 --link transmission:transmission \
 -v /docker/containers/organizr/config:/config \
--e PGID=1002 -e PUID=1003  \
+-e PUID=1002 -e PGID=1003 \
 -p 80:80 \
 lsiocommunity/organizr
 
