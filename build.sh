@@ -6,7 +6,7 @@
 #Source instructions for Dockerizing Clusterbox
 #https://zackreed.me/docker-how-and-why-i-use-it/
 
-USER=braddavis
+USER=cbuser
 KEEPMOUNTS=false
 ENCRYPTEDMOVIEFOLDER=IepOejn11g4nP5JHvRa6GShx
 ENCRYPTEDTVFOLDER=jCAtPeFmvjtPrlSeYLx5G2kd
@@ -85,7 +85,7 @@ echo "Starting NZBget Container..."
 docker rm -fv nzbget; docker run -d \
 --name nzbget \
 -p 6789:6789 \
--e PUID=1002 -e PGID=1003 \
+-e PUID=1000 -e PGID=1000 \
 -v /docker/containers/nzbget/config:/config \
 -v /docker/downloads:/downloads \
 -v /storage:/storage \
@@ -96,7 +96,7 @@ echo "Starting Plex Container..."
 docker rm -fv plex; docker run -d \
 --name plex \
 --network=host \
--e PLEX_UID=1002 -e PLEX_GID=1003 \
+-e PLEX_UID=1000 -e PLEX_GID=1000 \
 -e TZ="America/Los Angeles" \
 -v /docker/containers/plex/config:/config \
 -v /docker/containers/plex/transcode:/transcode \
@@ -110,7 +110,7 @@ docker rm -fv plexpy; docker run -d \
 -v /etc/localtime:/etc/localtime:ro \
 -v /docker/containers/plexpy/config:/config \
 -v /docker/containers/plex/config/Library/Application\040Support/Plex\040Media\040Server/Logs:/logs:ro \
--e PUID=1002 -e PGID=1003 \
+-e PUID=1000 -e PGID=1000 \
 -p 8181:8181 \
 linuxserver/plexpy
 
@@ -128,7 +128,7 @@ docker rm -fv jackett; docker run -d \
 --name=jackett \
 -v /docker/containers/jackett/config:/config \
 -v /docker/containers/jackett/blackhole:/downloads \
--e PUID=1002 -e PGID=1003 \
+-e PUID=1000 -e PGID=1000 \
 -e TZ="America/Los Angeles" \
 -v /etc/localtime:/etc/localtime:ro \
 -p 9117:9117 \
@@ -155,7 +155,7 @@ docker rm -fv rclone.movie; docker run -d \
 -v /home/$USER/.local/$ENCRYPTEDMOVIEFOLDER:/data \
 -v /home/$USER/local/movies:/media \
 -v /home/$USER/rclone_config:/config \
--e SYNC_COMMAND="rclone copy -v /data/ gdrive_clusterbox:$USER/$ENCRYPTEDMOVIEFOLDER --size-only --config=/config/rclone.conf  --log-file=/config/rclone_movie_clusterbox.log && rclone move -v /data/ gdrive_unlimited:$USER/$ENCRYPTEDMOVIEFOLDER --size-only --config=/config/rclone.conf  --log-file=/config/rclone_movie_unlimited.log" \
+-e SYNC_COMMAND="rclone copy -v /data/ gdrive_clusterbox:cb/$ENCRYPTEDMOVIEFOLDER --size-only --config=/config/rclone.conf  --log-file=/config/rclone_movie_clusterbox.log" \
 that1guy/docker-rclone
 
 
@@ -169,7 +169,7 @@ docker rm -fv radarr; docker run -d \
 -v /docker/downloads:/downloads \
 -v /docker/containers/transmission/data:/data \
 -v /home/$USER/scripts:/scripts \
--e PUID=1002 -e PGID=1003 \
+-e PUID=1000 -e PGID=1000 \
 -e TZ="America/Los Angeles" \
 -p 7878:7878 \
 linuxserver/radarr
@@ -182,7 +182,7 @@ docker rm -fv rclone.tv; docker run -d \
 -v /home/$USER/.local/$ENCRYPTEDTVFOLDER:/data \
 -v /home/$USER/local/tv:/media \
 -v /home/$USER/rclone_config:/config \
--e SYNC_COMMAND="rclone copy -v /data/ gdrive_clusterbox:$USER/$ENCRYPTEDTVFOLDER --size-only --config=/config/rclone.conf  --log-file=/config/rclone_tv_clusterbox.log && rclone move -v /data/ gdrive_unlimited:$USER/$ENCRYPTEDTVFOLDER --size-only --config=/config/rclone.conf  --log-file=/config/rclone_tv_unlimited.log" \
+-e SYNC_COMMAND="rclone copy -v /data/ gdrive_clusterbox:cb/$ENCRYPTEDTVFOLDER --size-only --config=/config/rclone.conf  --log-file=/config/rclone_tv_clusterbox.log" \
 that1guy/docker-rclone
 
 
@@ -192,7 +192,7 @@ docker rm -fv sonarr; docker run -d \
 --link rclone.tv:rclone.tv \
 --link transmission:transmission \
 -p 8989:8989 \
--e PUID=1002 -e PGID=1003 \
+-e PUID=1000 -e PGID=1000 \
 -v /etc/localtime:/etc/localtime:ro \
 -v /docker/containers/sonarr/config:/config \
 -v /storage:/storage \
@@ -209,7 +209,7 @@ docker rm -fv ombi; docker run -d \
 --link sonarr:sonarr \
 -v /etc/localtime:/etc/localtime:ro \
 -v /docker/containers/ombi/config:/config \
--e PUID=1002 -e PGID=1003 \
+-e PUID=1000 -e PGID=1000 \
 -e TZ="America/Los Angeles" \
 -p 3579:3579 \
 linuxserver/ombi
@@ -291,7 +291,7 @@ docker rm -fv organizr; docker run -d \
 --link jackett:jackett \
 --link transmission:transmission \
 -v /docker/containers/organizr/config:/config \
--e PUID=1002 -e PGID=1003 \
+-e PUID=1000 -e PGID=1000 \
 -p 80:80 \
 lsiocommunity/organizr
 

@@ -1,6 +1,6 @@
 #!/bin/sh
  
-USER=braddavis
+USER=cbuser
 
 #Unmount any directories already mounted
 echo "mount.sh:  Unmounting all rsync and encrypted directories..."
@@ -32,8 +32,8 @@ sleep 3s
 echo "mount.sh:  Creating all necessary folder structures..."
 mkdir -p /home/$USER/.gdrive_clusterbox
 mkdir -p /home/$USER/gdrive_clusterbox
-mkdir -p /home/$USER/.gdrive_unlimited
-mkdir -p /home/$USER/gdrive_unlimited
+#mkdir -p /home/$USER/.gdrive_unlimited
+#mkdir -p /home/$USER/gdrive_unlimited
 mkdir -p /home/$USER/.local
 
 sudo rm -rf /home/$USER/local
@@ -50,8 +50,8 @@ echo "mount.sh:  Initializing rClone..."
 #sudo rclone mount -v gdrive_clusterbox:$USER /home/$USER/.gdrive_clusterbox --log-file=/home/braddavis/rclone_config/gdrive_clusterbox_mount.log &
 #sudo rclone mount -v gdrive_unlimited:$USER /home/$USER/.gdrive_unlimited --log-file=/home/braddavis/rclone_config/gdrive_unlimited_mount.log &
 
-rclone mount -v gdrive_clusterbox:$USER /home/$USER/.gdrive_clusterbox &
-rclone mount -v gdrive_unlimited:$USER /home/$USER/.gdrive_unlimited &
+rclone mount -v gdrive_clusterbox:cb /home/$USER/.gdrive_clusterbox --log-file=/home/$USER/rclone_config/gdrive_clusterbox_mount.log &
+#rclone mount -v gdrive_unlimited:braddavis /home/$USER/.gdrive_unlimited &
 
 echo "Wating 3s...."
 sleep 3s
@@ -59,7 +59,7 @@ sleep 3s
 #Mount encryption over these folders
 echo "mount.sh:  Encrypting all hidden directories..."
 ENCFS6_CONFIG='/home/'$USER'/encfs/encfs.xml' encfs -o allow_other --extpass="cat /home/"$USER"/encfs/encfspass" /home/$USER/.gdrive_clusterbox /home/$USER/gdrive_clusterbox
-ENCFS6_CONFIG='/home/'$USER'/encfs/encfs.xml' encfs -o allow_other --extpass="cat /home/"$USER"/encfs/encfspass" /home/$USER/.gdrive_unlimited /home/$USER/gdrive_unlimited
+#ENCFS6_CONFIG='/home/'$USER'/encfs/encfs.xml' encfs -o allow_other --extpass="cat /home/"$USER"/encfs/encfspass" /home/$USER/.gdrive_unlimited /home/$USER/gdrive_unlimited
 ENCFS6_CONFIG='/home/'$USER'/encfs/encfs.xml' encfs -o allow_other --extpass="cat /home/"$USER"/encfs/encfspass" /home/$USER/.local /home/$USER/local
  
 echo "Wating 3s...."
@@ -67,8 +67,8 @@ sleep 3s
 
 #Use union-fs to merge our remote and local directories
 echo "mount.sh:  Merging all directories with UnionFS..."
-unionfs-fuse -o cow,allow_other /home/$USER/local=RW:/home/$USER/gdrive_clusterbox=RO:/home/$USER/gdrive_unlimited=RO /storage/
-#unionfs-fuse -o cow,allow_other /home/$USER/local=RW:/home/$USER/gdrive_unlimited=RO /storage/
+#unionfs-fuse -o cow,allow_other /home/$USER/local=RW:/home/$USER/gdrive_clusterbox=RO:/home/$USER/gdrive_unlimited=RO /storage/
+unionfs-fuse -o cow,allow_other /home/$USER/local=RW:/home/$USER/gdrive_clusterbox=RO /storage/
 
 echo "Wating 3s...."
 sleep 3s
@@ -77,6 +77,7 @@ echo "mount.sh:  Creating all necessary subdirectories in /local..."
 mkdir -p /home/$USER/local/tv
 mkdir -p /home/$USER/local/movies
 mkdir -p /home/$USER/local/anime
+sudo chown -R $USER:$USER /home/$USER/local
  
 echo "mount.sh:  Mount.sh Done..."
 exit
