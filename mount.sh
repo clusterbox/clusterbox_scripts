@@ -50,7 +50,22 @@ echo "mount.sh:  Initializing rClone..."
 #sudo rclone mount -v gdrive_clusterbox:$USER /home/$USER/.gdrive_clusterbox --log-file=/home/braddavis/rclone_config/gdrive_clusterbox_mount.log &
 #sudo rclone mount -v gdrive_unlimited:$USER /home/$USER/.gdrive_unlimited --log-file=/home/braddavis/rclone_config/gdrive_unlimited_mount.log &
 
-rclone mount -v gdrive_clusterbox:cb /home/$USER/.gdrive_clusterbox --log-file=/home/$USER/rclone_config/gdrive_clusterbox_mount.log &
+#rclone mount -v gdrive_clusterbox:cb /home/$USER/.gdrive_clusterbox --log-file=/home/$USER/rclone_config/gdrive_clusterbox_mount.log &
+
+
+rclone mount \
+--read-only \
+--allow-other \
+--acd-templink-threshold 0 \
+--stats 1s \
+--buffer-size 1G \
+--timeout 5s \
+--contimeout 5s \
+--log-file=/home/$USER/rclone_config/gdrive_clusterbox_mount.log \
+-v gdrive_clusterbox:cb /home/$USER/.gdrive_clusterbox &
+
+
+
 #rclone mount -v gdrive_unlimited:braddavis /home/$USER/.gdrive_unlimited &
 
 echo "Wating 3s...."
@@ -68,7 +83,12 @@ sleep 3s
 #Use union-fs to merge our remote and local directories
 echo "mount.sh:  Merging all directories with UnionFS..."
 #unionfs-fuse -o cow,allow_other /home/$USER/local=RW:/home/$USER/gdrive_clusterbox=RO:/home/$USER/gdrive_unlimited=RO /storage/
-unionfs-fuse -o cow,allow_other /home/$USER/local=RW:/home/$USER/gdrive_clusterbox=RO /storage/
+#unionfs-fuse -o cow,allow_other /home/$USER/local=RW:/home/$USER/gdrive_clusterbox=RO /storage/
+
+unionfs-fuse \
+-o cow,allow_other,direct_io,sync_read \
+/home/$USER/local=RW:/home/$USER/gdrive_clusterbox=RO /storage/
+
 
 echo "Wating 3s...."
 sleep 3s
