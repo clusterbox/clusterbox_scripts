@@ -62,11 +62,12 @@ echo "mount.sh:  Initializing plexdrive..."
 
 ## Attempting to mount via plexdrive
 nohup sudo plexdrive mount \
+-v 3 \
 -o allow_other \
 --root-node-id="0B2enl0HmCklJNmh2NnR3UjFnRzA" \
 --uid=1000 \
 --gid=1000 \
-~/.gdrive_clusterbox > /dev/null 2>&1 &
+~/.gdrive_clusterbox > /home/$USER/logs/plexdrive/plexdrive.log &
 
 
 echo "Wating 3s...."
