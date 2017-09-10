@@ -17,42 +17,6 @@ while getopts ':k' opts; do
     esac
 done
 
-echo "Updating apt-get"
-sudo apt-get -qq update
-
-echo "Installing encfs..."
-sudo apt-get install -y -qq encfs
-
-echo "Installing unionfs..."
-sudo apt-get install -y -qq unionfs-fuse
-
-echo "Installing Docker dependencies..."
-sudo apt-get install -y -qq \
-    linux-image-extra-$(uname -r) \
-    linux-image-extra-virtual
-
-sudo apt-get install -y -qq \
-    apt-transport-https \
-    ca-certificates \
-    curl \
-    software-properties-common
-
-
-echo "Adding Docker GPG key..."
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-sudo apt-key fingerprint 0EBFCD88
-
-echo "Install Docker..."
-sudo add-apt-repository \
-   "deb [arch=armhf] https://download.docker.com/linux/ubuntu \
-   $(lsb_release -cs) \
-   stable"
-
-sudo apt-get install -y docker.io
-sudo groupadd docker
-sudo usermod -aG docker $USER
-
-
 if [ "$KEEPMOUNTS" = false ] ; then
     /bin/bash /home/$USER/scripts/mount.sh
 fi
@@ -72,8 +36,8 @@ sudo mkdir -p /docker/containers/radarr/config
 sudo mkdir -p /docker/containers/sonarr/config
 sudo mkdir -p /docker/containers/organizr/config
 sudo mkdir -p /docker/containers/ombi/config
-sudo mkdir -p /docker/containers/jacket/config
-sudo mkdir -p /docker/containers/jacket/blackhole
+sudo mkdir -p /docker/containers/jackett/config
+sudo mkdir -p /docker/containers/jackett/blackhole
 sudo mkdir -p /docker/containers/transmission/config
 sudo mkdir -p /docker/containers/transmission/data
 sudo mkdir -p /docker/downloads/completed/movies
@@ -109,7 +73,7 @@ docker rm -fv plexpy; docker run -d \
 --name=plexpy \
 -v /etc/localtime:/etc/localtime:ro \
 -v /docker/containers/plexpy/config:/config \
--v /docker/containers/plex/config/Library/Application\040Support/Plex\040Media\040Server/Logs:/logs:ro \
+-v /docker/containers/plex/config/Library/Application\ Support/Plex\ Media\ Server/Logs:/logs:ro \
 -e PUID=1000 -e PGID=1000 \
 -p 8181:8181 \
 linuxserver/plexpy

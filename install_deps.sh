@@ -2,6 +2,35 @@
 
 USER=cbuser
 
+echo "Updating apt-get"
+sudo apt-get -qq update
+
+echo "Installing Docker dependencies..."
+sudo apt-get install -y -qq \
+    linux-image-extra-$(uname -r) \
+    linux-image-extra-virtual
+
+sudo apt-get install -y -qq \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    software-properties-common
+
+
+echo "Adding Docker GPG key..."
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo apt-key fingerprint 0EBFCD88
+
+echo "Install Docker..."
+sudo add-apt-repository \
+   "deb [arch=armhf] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+
+sudo apt-get install -y docker.io
+sudo groupadd docker
+sudo usermod -aG docker $USER
+
 echo "Installing Unzip..."
 
 sudo apt-get install -y -qq unzip
