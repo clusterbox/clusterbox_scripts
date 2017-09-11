@@ -241,6 +241,16 @@ docker rm -fv term; docker run -d \
 -dt krishnasrinivas/wetty
 
 
+echo "Starting Netdata..."
+docker rm -fv netdata; docker run -d --cap-add SYS_PTRACE \
+--name=netdata \
+-v /proc:/host/proc:ro \
+-v /sys:/host/sys:ro \
+-v /var/run/docker.sock:/var/run/docker.sock \
+-p 19999:19999 \
+titpetric/netdata:latest
+
+
 echo "Starting Organizr..."
 docker rm -fv organizr; docker run -d \
 --name=organizr \
