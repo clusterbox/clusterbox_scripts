@@ -17,9 +17,9 @@ while getopts ':k' opts; do
     esac
 done
 
-if [ "$KEEPMOUNTS" = false ] ; then
-    /bin/bash /home/$USER/scripts/mount.sh
-fi
+#if [ "$KEEPMOUNTS" = false ] ; then
+#    /bin/bash /home/$USER/scripts/mount.sh
+#fi
 
 echo "Stopping and removing all docker containers..."
 docker stop $(docker ps -a -q)
@@ -40,20 +40,47 @@ sudo mkdir -p /docker/containers/jackett/config
 sudo mkdir -p /docker/containers/jackett/blackhole
 sudo mkdir -p /docker/containers/transmission/config
 sudo mkdir -p /docker/containers/transmission/data
-sudo mkdir -p /docker/containers/docker-proxy/certs
+sudo mkdir -p /docker/containers/nginx-proxy/certs
 sudo mkdir -p /docker/downloads/completed/movies
 sudo mkdir -p /docker/downloads/completed/tv
 sudo chown -R $USER:$USER /docker
 
+sudo mkdir -p /etc/nginx/certs
+sudo touch /etc/nginx/vhost.d
+mkdir -p /usr/share/nginx/html
 
-echo "Starting Docker Proxy Container..."
-docker rm -fv docker-proxy; docker run -d \
---name=docker-proxy \
--p 80:80 \
--p 433:433 \
--v /var/run/docker.sock:/tmp/docker.sock:ro \
+echo "Starting Nginx Proxy Container..."
+#docker rm -fv docker-proxy; docker run -d \
+#--name=docker-proxy \
+#-p 80:80 \
+#-p 433:433 \
+#-v /var/run/docker.sock:/tmp/docker.sock:ro \
+#-e DEFAULT_HOST=portal.clusterboxcloud.com \
+#jwilder/nginx-proxy:alpine
+
+
+
+docker rm -fv nginx-proxy; docker run -d \
+--name=nginx-proxy \
 -e DEFAULT_HOST=portal.clusterboxcloud.com \
+-p 80:80 \
+-p 443:443 \
+-v /docker/containers/nginx-proxy/certs:/etc/nginx/certs:ro \
+-v /etc/nginx/vhost.d \
+-v /usr/share/nginx/html \
+-v /var/run/docker.sock:/tmp/docker.sock:ro \
+--label com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy \
 jwilder/nginx-proxy:alpine
+
+
+echo "Starting Nginx LetsEncrypt Container..."
+docker rm -fv nginx-proxy-lets-encrypt; docker run -d \
+--name=nginx-proxy-lets-encrypt \
+-v /docker/containers/nginx-proxy/certs:/etc/nginx/certs:rw \
+-v /var/run/docker.sock:/var/run/docker.sock:ro \
+--volumes-from nginx-proxy \
+jrcs/letsencrypt-nginx-proxy-companion
+
 
 
 echo "Starting NZBget Container..."
@@ -89,6 +116,7 @@ plexinc/pms-docker:plexpass
 echo "Starting PlexPy Container..."
 docker rm -fv plexpy; docker run -d \
 --name=plexpy \
+--link plex:plex \
 -v /etc/localtime:/etc/localtime:ro \
 -v /docker/containers/plexpy/config:/config \
 -v /docker/containers/plex/config/Library/Application\ Support/Plex\ Media\ Server/Logs:/logs:ro \
@@ -191,6 +219,7 @@ docker rm -fv ombi; docker run -d \
 --name=ombi \
 --link radarr:radarr \
 --link sonarr:sonarr \
+--link plex:plex \
 -v /etc/localtime:/etc/localtime:ro \
 -v /docker/containers/ombi/config:/config \
 -e PUID=1000 -e PGID=1000 \
@@ -288,6 +317,9 @@ docker rm -fv organizr; docker run -d \
 -v /docker/containers/organizr/config:/config \
 -e PUID=1000 -e PGID=1000 \
 -e VIRTUAL_HOST=portal.clusterboxcloud.com \
+-e LETSENCRYPT_HOST=portal.clusterboxcloud.com \
+-e LETSENCRYPT_EMAIL=clusterbox@clusterboxcloud.com \
+-e HTTPS_METHOD=noredirect \
 -p 29999:29999 \
 lsiocommunity/organizr
 
