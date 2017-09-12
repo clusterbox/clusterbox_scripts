@@ -40,9 +40,20 @@ sudo mkdir -p /docker/containers/jackett/config
 sudo mkdir -p /docker/containers/jackett/blackhole
 sudo mkdir -p /docker/containers/transmission/config
 sudo mkdir -p /docker/containers/transmission/data
+sudo mkdir -p /docker/containers/docker-proxy/certs
 sudo mkdir -p /docker/downloads/completed/movies
 sudo mkdir -p /docker/downloads/completed/tv
 sudo chown -R $USER:$USER /docker
+
+
+echo "Starting Docker Proxy Container..."
+docker rm -fv docker-proxy; docker run -d \
+--name=docker-proxy \
+-p 80:80 \
+-p 433:433 \
+-v /var/run/docker.sock:/tmp/docker.sock:ro \
+-e DEFAULT_HOST=portal.clusterboxcloud.com \
+jwilder/nginx-proxy:alpine
 
 
 echo "Starting NZBget Container..."
@@ -59,7 +70,14 @@ linuxserver/nzbget
 echo "Starting Plex Container..."
 docker rm -fv plex; docker run -d \
 --name plex \
---network=host \
+-p 32400:32400 \
+-p 32400:32400/udp \
+-p 32469:32469 \
+-p 32469:32469/udp \
+-p 5353:5353/udp \
+-p 1900:1900/udp \
+-e VIRTUAL_HOST=plex.clusterboxcloud.com \
+-e VIRTUAL_PORT=32400 \
 -e PLEX_UID=1000 -e PLEX_GID=1000 \
 -e TZ="America/Los Angeles" \
 -v /docker/containers/plex/config:/config \
@@ -128,6 +146,7 @@ docker rm -fv radarr; docker run -d \
 --name=radarr \
 --link rclone.movie:rclone.movie \
 --link transmission:transmission \
+--link nzbget:nzbget \
 -v /docker/containers/radarr/config:/config \
 -v /storage:/storage \
 -v /docker/downloads:/downloads \
@@ -155,6 +174,7 @@ docker rm -fv sonarr; docker run -d \
 --name=sonarr \
 --link rclone.tv:rclone.tv \
 --link transmission:transmission \
+--link nzbget:nzbget \
 -p 8989:8989 \
 -e PUID=1000 -e PGID=1000 \
 -v /etc/localtime:/etc/localtime:ro \
@@ -264,78 +284,14 @@ docker rm -fv organizr; docker run -d \
 --link term:term \
 --link jackett:jackett \
 --link transmission:transmission \
+--link netdata:netdata \
 -v /docker/containers/organizr/config:/config \
 -e PUID=1000 -e PGID=1000 \
--p 80:80 \
+-e VIRTUAL_HOST=portal.clusterboxcloud.com \
+-p 29999:29999 \
 lsiocommunity/organizr
 
 
 echo "******** ClusterBox Build Complete ********"
 
 exit
-
-
-
-
-
-
-
-
-
-
-
-
-#echo "Installing Unzip..."
-
-#sudo apt-get install -y -qq unzip
-
-#echo "Installing rSync..."
-
-#mkdir /home/$USER/tmp
-#wget http://downloads.rclone.org/rclone-current-linux-amd64.zip -P /home/$USER/tmp
-#cd /home/$USER/tmp
-#unzip -o rclone-current-linux-amd64.zip
-#cd /home/$USER/tmp/rclone-*-linux-amd64
-#sudo cp rclone /usr/bin/
-#sudo chown root:root /usr/bin/rclone
-#sudo chmod 755 /usr/bin/rclone
-#sudo mkdir -p /usr/local/share/man/man1
-#sudo cp rclone.1 /usr/local/share/man/man1/
-#sudo mandb
-
-#sudo rm /home/$USER/tmp/rclone-current-linux-amd64.zip
-#sudo rm -R /home/$USER/tmp
-
-#echo "Installing w3m headless browser...."
-
-#sudo apt-get install -y -qq w3m
-
-#echo "Installing Screen...."
-
-#sudo apt-get install -y -qq screen
-
-
-
-
-
-
-
-#echo "Initializing EncFS Encryption...."
-
-#if [ -f "/home/"$USER"/encfs.xml" ]
-#then
-#    echo "EncFS encryption already initialized"
-#else
-#    echo "EncFS first run"
-#    encfs --standard /home/$USER/.local /home/$USER/local
-#    #Move EncFS to an easier location
-#    mv /home/$USER/.local/.encfs6.xml  /home/$USER/encfs.xml
-
-    #Mount encryption over these folders
-#    ENCFS6_CONFIG='/home/'$USER'/encfs.xml' encfs --extpass="cat /home/"$USER"/scripts/encfspass" /home/$USER/.gdrive /home/$USER/gdrive
-#    ENCFS6_CONFIG='/home/'$USER'/encfs.xml' encfs --extpass="cat /home/"$USER"/scripts/encfspass" /home/$USER/.local /home/$USER/local
-#fi
-
-
-#Use union-fs to merge our remote and local directories
-#unionfs-fuse -o cow,allow_other,default_permissions,nonempty /home/$USER/local=RW:/home/$USER/gdrive=RO /storage/
