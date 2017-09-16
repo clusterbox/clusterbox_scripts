@@ -17,9 +17,9 @@ while getopts ':k' opts; do
     esac
 done
 
-#if [ "$KEEPMOUNTS" = false ] ; then
-#    /bin/bash /home/$USER/scripts/mount.sh
-#fi
+if [ "$KEEPMOUNTS" = false ] ; then
+    /bin/bash /home/$USER/scripts/mount.sh
+fi
 
 echo "Stopping and removing all docker containers..."
 docker stop $(docker ps -a -q)
@@ -27,45 +27,37 @@ docker rm $(docker ps -a -q)
 
 
 echo "Creating docker container folder structures..."
-sudo mkdir -p /docker/containers/nzbget/config
-sudo mkdir -p /docker/containers/plex/config
-sudo mkdir -p /docker/containers/plex/transcode
-sudo mkdir -p /docker/containers/plexpy/config
-sudo mkdir -p /docker/containers/portainer/config
-sudo mkdir -p /docker/containers/radarr/config
-sudo mkdir -p /docker/containers/sonarr/config
-sudo mkdir -p /docker/containers/organizr/config
-sudo mkdir -p /docker/containers/ombi/config
-sudo mkdir -p /docker/containers/jackett/config
-sudo mkdir -p /docker/containers/jackett/blackhole
-sudo mkdir -p /docker/containers/transmission/config
-sudo mkdir -p /docker/containers/transmission/data
-sudo mkdir -p /docker/containers/nginx-proxy/certs
-sudo mkdir -p /docker/downloads/completed/movies
-sudo mkdir -p /docker/downloads/completed/tv
-sudo chown -R $USER:$USER /docker
+mkdir -p /home/$USER/docker/containers/nzbget/config
+mkdir -p /home/$USER/docker/containers/plex/config
+mkdir -p /home/$USER/docker/containers/plex/transcode
+mkdir -p /home/$USER/docker/containers/plexpy/config
+mkdir -p /home/$USER/docker/containers/portainer/config
+mkdir -p /home/$USER/docker/containers/radarr/config
+mkdir -p /home/$USER/docker/containers/sonarr/config
+mkdir -p /home/$USER/docker/containers/organizr/config
+mkdir -p /home/$USER/docker/containers/ombi/config
+mkdir -p /home/$USER/docker/containers/jackett/config
+mkdir -p /home/$USER/docker/containers/jackett/blackhole
+mkdir -p /home/$USER/docker/containers/transmission/config
+mkdir -p /home/$USER/docker/containers/transmission/data
+mkdir -p /home/$USER/docker/containers/rclone.movie/logs
+mkdir -p /home/$USER/docker/containers/rclone.tv/logs
+mkdir -p /home/$USER/docker/containers/nginx-proxy/certs
+mkdir -p /home/$USER/docker/downloads/completed/movies
+mkdir -p /home/$USER/docker/downloads/completed/tv
+#chown -R $USER:$USER /home/$USER/docker
 
 sudo mkdir -p /etc/nginx/certs
 sudo touch /etc/nginx/vhost.d
 mkdir -p /usr/share/nginx/html
 
 echo "Starting Nginx Proxy Container..."
-#docker rm -fv docker-proxy; docker run -d \
-#--name=docker-proxy \
-#-p 80:80 \
-#-p 433:433 \
-#-v /var/run/docker.sock:/tmp/docker.sock:ro \
-#-e DEFAULT_HOST=portal.clusterboxcloud.com \
-#jwilder/nginx-proxy:alpine
-
-
-
 docker rm -fv nginx-proxy; docker run -d \
 --name=nginx-proxy \
 -e DEFAULT_HOST=portal.clusterboxcloud.com \
 -p 80:80 \
 -p 443:443 \
--v /docker/containers/nginx-proxy/certs:/etc/nginx/certs:ro \
+-v /home/$USER/docker/containers/nginx-proxy/certs:/etc/nginx/certs:ro \
 -v /etc/nginx/vhost.d \
 -v /usr/share/nginx/html \
 -v /var/run/docker.sock:/tmp/docker.sock:ro \
@@ -76,7 +68,7 @@ jwilder/nginx-proxy:alpine
 echo "Starting Nginx LetsEncrypt Container..."
 docker rm -fv nginx-proxy-lets-encrypt; docker run -d \
 --name=nginx-proxy-lets-encrypt \
--v /docker/containers/nginx-proxy/certs:/etc/nginx/certs:rw \
+-v /home/$USER/docker/containers/nginx-proxy/certs:/etc/nginx/certs:rw \
 -v /var/run/docker.sock:/var/run/docker.sock:ro \
 --volumes-from nginx-proxy \
 jrcs/letsencrypt-nginx-proxy-companion
@@ -88,9 +80,9 @@ docker rm -fv nzbget; docker run -d \
 --name nzbget \
 -p 6789:6789 \
 -e PUID=1000 -e PGID=1000 \
--v /docker/containers/nzbget/config:/config \
--v /docker/downloads:/downloads \
--v /storage:/storage \
+-v /home/$USER/docker/containers/nzbget/config:/config \
+-v /home/$USER/docker/downloads:/downloads \
+-v /home/$USER/storage:/storage \
 linuxserver/nzbget
 
 
@@ -107,9 +99,9 @@ docker rm -fv plex; docker run -d \
 -e VIRTUAL_PORT=32400 \
 -e PLEX_UID=1000 -e PLEX_GID=1000 \
 -e TZ="America/Los Angeles" \
--v /docker/containers/plex/config:/config \
--v /docker/containers/plex/transcode:/transcode \
--v /storage:/data \
+-v /home/$USER/docker/containers/plex/config:/config \
+-v /home/$USER/docker/containers/plex/transcode:/transcode \
+-v /home/$USER/storage:/data \
 plexinc/pms-docker:plexpass
 
 
@@ -118,8 +110,8 @@ docker rm -fv plexpy; docker run -d \
 --name=plexpy \
 --link plex:plex \
 -v /etc/localtime:/etc/localtime:ro \
--v /docker/containers/plexpy/config:/config \
--v /docker/containers/plex/config/Library/Application\ Support/Plex\ Media\ Server/Logs:/logs:ro \
+-v /home/$USER/docker/containers/plexpy/config:/config \
+-v /home/$USER/docker/containers/plex/config/Library/Application\ Support/Plex\ Media\ Server/Logs:/logs:ro \
 -e PUID=1000 -e PGID=1000 \
 -p 8181:8181 \
 linuxserver/plexpy
@@ -129,15 +121,15 @@ echo "Starting Portainer Container..."
 docker rm -fv portainer; docker run -d \
 --name=portainer \
 -p 9000:9000 \
--v /docker/containers/portainer/config:/data \
+-v /home/$USER/docker/containers/portainer/config:/data \
 -v /var/run/docker.sock:/var/run/docker.sock portainer/portainer
 
 
 echo "Starting Jackett..."
 docker rm -fv jackett; docker run -d \
 --name=jackett \
--v /docker/containers/jackett/config:/config \
--v /docker/containers/jackett/blackhole:/downloads \
+-v /home/$USER/docker/containers/jackett/config:/config \
+-v /home/$USER/docker/containers/jackett/blackhole:/downloads \
 -e PUID=1000 -e PGID=1000 \
 -e TZ="America/Los Angeles" \
 -v /etc/localtime:/etc/localtime:ro \
@@ -146,14 +138,26 @@ linuxserver/jackett
 
 
 echo "Starting Transmission..."
+#docker rm -fv transmission; docker run -d --cap-add=NET_ADMIN --device=/dev/net/tun -d \
+#--name=transmission \
+#--restart="always" \
+#--dns 8.8.8.8 \
+#--dns 8.8.8.4 \
+#-v /docker/containers/transmission/data:/data \
+#-v /etc/localtime:/etc/localtime:ro \
+#--env-file /docker/containers/transmission/config/DockerEnv \
+#-p 9091:9091 \
+#haugene/transmission-openvpn
+
 docker rm -fv transmission; docker run -d --cap-add=NET_ADMIN --device=/dev/net/tun -d \
 --name=transmission \
 --restart="always" \
---dns 8.8.8.8 \
---dns 8.8.8.4 \
--v /docker/containers/transmission/data:/data \
+-v /home/$USER/docker/containers/transmission/data:/data \
 -v /etc/localtime:/etc/localtime:ro \
---env-file /docker/containers/transmission/config/DockerEnv \
+--env-file /home/$USER/docker/containers/transmission/config/DockerEnv \
+-e "OPENVPN_CONFIG=Germany" \
+-e "ENABLE_UFW=true" \
+-e "LOCAL_NETWORK=172.17.0.1/24" \
 -p 9091:9091 \
 haugene/transmission-openvpn
 
@@ -162,12 +166,12 @@ echo "Starting rclone.movie Container..."
 docker rm -fv rclone.movie; docker run -d \
 --name=rclone.movie \
 -p 8081:8080 \
--v /home/$USER/.local/$ENCRYPTEDMOVIEFOLDER:/data \
--v /home/$USER/local/movies:/media \
--v /home/$USER/rclone_config:/config \
--e SYNC_COMMAND="rclone copy -v /data/ gdrive_clusterbox:cb/$ENCRYPTEDMOVIEFOLDER --size-only --config=/config/rclone.conf  --log-file=/config/rclone_movie_clusterbox.log" \
+-v /home/$USER/mount/.local/$ENCRYPTEDMOVIEFOLDER:/data \
+-v /home/$USER/mount/local/movies:/media \
+-v /home/$USER/.config/rclone:/config \
+-v /home/$USER/docker/containers/rclone.movie/logs:/logs \
+-e SYNC_COMMAND="rclone copy -v /data/ gdrive_clusterboxcloud:cb/$ENCRYPTEDMOVIEFOLDER --size-only --config=/config/rclone.conf  --log-file=/logs/rclone.log" \
 that1guy/docker-rclone
-
 
 echo "Starting Radarr Container..."
 docker rm -fv radarr; docker run -d \
@@ -175,10 +179,10 @@ docker rm -fv radarr; docker run -d \
 --link rclone.movie:rclone.movie \
 --link transmission:transmission \
 --link nzbget:nzbget \
--v /docker/containers/radarr/config:/config \
--v /storage:/storage \
--v /docker/downloads:/downloads \
--v /docker/containers/transmission/data:/data \
+-v /home/$USER/docker/containers/radarr/config:/config \
+-v /home/$USER/storage:/storage \
+-v /home/$USER/docker/downloads:/downloads \
+-v /home/$USER/docker/containers/transmission/data:/data \
 -v /home/$USER/scripts:/scripts \
 -e PUID=1000 -e PGID=1000 \
 -e TZ="America/Los Angeles" \
@@ -190,10 +194,11 @@ echo "Starting rclone.tv Container..."
 docker rm -fv rclone.tv; docker run -d \
 --name=rclone.tv \
 -p 8082:8080 \
--v /home/$USER/.local/$ENCRYPTEDTVFOLDER:/data \
--v /home/$USER/local/tv:/media \
--v /home/$USER/rclone_config:/config \
--e SYNC_COMMAND="rclone copy -v /data/ gdrive_clusterbox:cb/$ENCRYPTEDTVFOLDER --size-only --config=/config/rclone.conf  --log-file=/config/rclone_tv_clusterbox.log" \
+-v /home/$USER/mount/.local/$ENCRYPTEDTVFOLDER:/data \
+-v /home/$USER/mount/local/tv:/media \
+-v /home/$USER/.config/rclone:/config \
+-v /home/$USER/docker/containers/rclone.tv/logs:/logs \
+-e SYNC_COMMAND="rclone copy -v /data/ gdrive_clusterboxcloud:cb/$ENCRYPTEDTVFOLDER --size-only --config=/config/rclone.conf  --log-file=/logs/rclone.log" \
 that1guy/docker-rclone
 
 
@@ -206,10 +211,10 @@ docker rm -fv sonarr; docker run -d \
 -p 8989:8989 \
 -e PUID=1000 -e PGID=1000 \
 -v /etc/localtime:/etc/localtime:ro \
--v /docker/containers/sonarr/config:/config \
--v /storage:/storage \
--v /docker/downloads:/downloads \
--v /docker/containers/transmission/data:/data \
+-v /home/$USER/docker/containers/sonarr/config:/config \
+-v /home/$USER/storage:/storage \
+-v /home/$USER/docker/downloads:/downloads \
+-v /home/$USER/docker/containers/transmission/data:/data \
 -v /home/$USER/scripts:/scripts \
 linuxserver/sonarr
 
@@ -221,7 +226,7 @@ docker rm -fv ombi; docker run -d \
 --link sonarr:sonarr \
 --link plex:plex \
 -v /etc/localtime:/etc/localtime:ro \
--v /docker/containers/ombi/config:/config \
+-v /home/$USER/docker/containers/ombi/config:/config \
 -e PUID=1000 -e PGID=1000 \
 -e TZ="America/Los Angeles" \
 -p 3579:3579 \
@@ -251,7 +256,7 @@ docker rm -fv harvester; docker run -d \
 -e "LOGIO_HARVESTER1STREAMNAME=docker" \
     -e "LOGIO_HARVESTER1LOGSTREAMS=/var/lib/docker/containers" \
     -e "LOGIO_HARVESTER1FILEPATTERN=*-json.log" \
--v /docker:/docker \
+-v /home/$USER/docker:/docker \
 -e "LOGIO_HARVESTER2STREAMNAME=ombi" \
     -e "LOGIO_HARVESTER2LOGSTREAMS=/docker/containers/ombi/config/logs" \
     -e "LOGIO_HARVESTER2FILEPATTERN=*.log" \
@@ -273,10 +278,16 @@ docker rm -fv harvester; docker run -d \
 -e "LOGIO_HARVESTER8STREAMNAME=sonarr" \
     -e "LOGIO_HARVESTER8LOGSTREAMS=/docker/containers/sonarr" \
     -e "LOGIO_HARVESTER8FILEPATTERN=*.log *.txt" \
--v /home/$USER/rclone_config:/rclone_config \
--e "LOGIO_HARVESTER9STREAMNAME=rclone" \
-    -e "LOGIO_HARVESTER9LOGSTREAMS=/rclone_config" \
+-e "LOGIO_HARVESTER9STREAMNAME=rclone_movie" \
+    -e "LOGIO_HARVESTER9LOGSTREAMS=/docker/containers/rclone.movie" \
     -e "LOGIO_HARVESTER9FILEPATTERN=*.log" \
+-e "LOGIO_HARVESTER10STREAMNAME=rclone_tv" \
+    -e "LOGIO_HARVESTER10LOGSTREAMS=/docker/containers/rclone.tv" \
+    -e "LOGIO_HARVESTER10FILEPATTERN=*.log" \
+-v /home/$USER/mount:/mount \
+-e "LOGIO_HARVESTER11STREAMNAME=plexdrive" \
+    -e "LOGIO_HARVESTER11LOGSTREAMS=/mount/logs/plexdrive" \
+    -e "LOGIO_HARVESTER11FILEPATTERN=*.log" \
 --link logio:logio \
 --name harvester \
 --user root \
@@ -314,7 +325,7 @@ docker rm -fv organizr; docker run -d \
 --link jackett:jackett \
 --link transmission:transmission \
 --link netdata:netdata \
--v /docker/containers/organizr/config:/config \
+-v /home/$USER/docker/containers/organizr/config:/config \
 -e PUID=1000 -e PGID=1000 \
 -e VIRTUAL_HOST=portal.clusterboxcloud.com \
 -e LETSENCRYPT_HOST=portal.clusterboxcloud.com \
