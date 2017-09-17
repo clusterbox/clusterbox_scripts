@@ -65,13 +65,13 @@ docker rm -fv nginx-proxy; docker run -d \
 jwilder/nginx-proxy:alpine
 
 
-echo "Starting Nginx LetsEncrypt Container..."
-docker rm -fv nginx-proxy-lets-encrypt; docker run -d \
---name=nginx-proxy-lets-encrypt \
--v /home/$USER/docker/containers/nginx-proxy/certs:/etc/nginx/certs:rw \
--v /var/run/docker.sock:/var/run/docker.sock:ro \
---volumes-from nginx-proxy \
-jrcs/letsencrypt-nginx-proxy-companion
+#echo "Starting Nginx LetsEncrypt Container..."
+#docker rm -fv nginx-proxy-lets-encrypt; docker run -d \
+#--name=nginx-proxy-lets-encrypt \
+#-v /home/$USER/docker/containers/nginx-proxy/certs:/etc/nginx/certs:rw \
+#-v /var/run/docker.sock:/var/run/docker.sock:ro \
+#--volumes-from nginx-proxy \
+#jrcs/letsencrypt-nginx-proxy-companion
 
 
 
@@ -139,28 +139,18 @@ linuxserver/jackett
 
 
 echo "Starting Transmission..."
-#docker rm -fv transmission; docker run -d --cap-add=NET_ADMIN --device=/dev/net/tun -d \
-#--name=transmission \
-#--restart="always" \
-#--dns 8.8.8.8 \
-#--dns 8.8.8.4 \
-#-v /docker/containers/transmission/data:/data \
-#-v /etc/localtime:/etc/localtime:ro \
-#--env-file /docker/containers/transmission/config/DockerEnv \
-#-p 9091:9091 \
-#haugene/transmission-openvpn
-
 docker rm -fv transmission; docker run -d --cap-add=NET_ADMIN --device=/dev/net/tun -d \
 --name=transmission \
 --restart="always" \
--v /home/$USER/docker/containers/transmission/data:/data \
+--dns=8.8.8.8 \
+--dns=8.8.8.4 \
+-v /home/cbuser/docker/containers/transmission/data:/data \
 -v /etc/localtime:/etc/localtime:ro \
+-e PUID=1000 -e PGID=1000 \
 --env-file /home/$USER/docker/containers/transmission/config/DockerEnv \
--e "OPENVPN_CONFIG=Germany" \
--e "ENABLE_UFW=true" \
--e "LOCAL_NETWORK=172.17.0.1/24" \
 -p 9091:9091 \
 haugene/transmission-openvpn
+
 
 
 echo "Starting rclone.movie Container..."
