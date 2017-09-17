@@ -11,6 +11,10 @@ KEEPMOUNTS=false
 ENCRYPTEDMOVIEFOLDER=IepOejn11g4nP5JHvRa6GShx
 ENCRYPTEDTVFOLDER=jCAtPeFmvjtPrlSeYLx5G2kd
 
+echo "Stopping and removing all docker containers..."
+docker rm -f $(docker ps -a -q)
+
+
 while getopts ':k' opts; do
     case "${opts}" in
         k) KEEPMOUNTS=$OPTARG ;;
@@ -20,10 +24,6 @@ done
 if [ "$KEEPMOUNTS" = false ] ; then
     /bin/bash /home/$USER/scripts/mount.sh
 fi
-
-echo "Stopping and removing all docker containers..."
-docker stop $(docker ps -a -q)
-docker rm $(docker ps -a -q)
 
 
 echo "Creating docker container folder structures..."
@@ -45,7 +45,7 @@ mkdir -p /home/$USER/docker/containers/rclone.tv/logs
 mkdir -p /home/$USER/docker/containers/nginx-proxy/certs
 mkdir -p /home/$USER/docker/downloads/completed/movies
 mkdir -p /home/$USER/docker/downloads/completed/tv
-#chown -R $USER:$USER /home/$USER/docker
+sudo chown -R $USER:$USER /home/$USER/docker
 
 sudo mkdir -p /etc/nginx/certs
 sudo touch /etc/nginx/vhost.d
@@ -98,6 +98,7 @@ docker rm -fv plex; docker run -d \
 -e VIRTUAL_HOST=plex.clusterboxcloud.com \
 -e VIRTUAL_PORT=32400 \
 -e PLEX_UID=1000 -e PLEX_GID=1000 \
+-e PUID=1000 -e PGID=1000 \
 -e TZ="America/Los Angeles" \
 -v /home/$USER/docker/containers/plex/config:/config \
 -v /home/$USER/docker/containers/plex/transcode:/transcode \
@@ -166,12 +167,14 @@ echo "Starting rclone.movie Container..."
 docker rm -fv rclone.movie; docker run -d \
 --name=rclone.movie \
 -p 8081:8080 \
--v /home/$USER/mount/.local/$ENCRYPTEDMOVIEFOLDER:/data \
--v /home/$USER/mount/local/movies:/media \
+-v /home/$USER/mount/local/movies:/local_media \
+-v /home/$USER/mount/.local/$ENCRYPTEDMOVIEFOLDER:/source_folder \
 -v /home/$USER/.config/rclone:/config \
 -v /home/$USER/docker/containers/rclone.movie/logs:/logs \
--e SYNC_COMMAND="rclone copy -v /data/ gdrive_clusterboxcloud:cb/$ENCRYPTEDMOVIEFOLDER --size-only --config=/config/rclone.conf  --log-file=/logs/rclone.log" \
+-e SYNC_COMMAND="rclone move -v /source_folder/ gdrive_clusterboxcloud:cb/$ENCRYPTEDMOVIEFOLDER --size-only" \
 that1guy/docker-rclone
+
+
 
 echo "Starting Radarr Container..."
 docker rm -fv radarr; docker run -d \
@@ -194,11 +197,11 @@ echo "Starting rclone.tv Container..."
 docker rm -fv rclone.tv; docker run -d \
 --name=rclone.tv \
 -p 8082:8080 \
--v /home/$USER/mount/.local/$ENCRYPTEDTVFOLDER:/data \
--v /home/$USER/mount/local/tv:/media \
+-v /home/$USER/mount/local/tv:/local_media \
+-v /home/$USER/mount/.local/$ENCRYPTEDTVFOLDER:/source_folder \
 -v /home/$USER/.config/rclone:/config \
 -v /home/$USER/docker/containers/rclone.tv/logs:/logs \
--e SYNC_COMMAND="rclone copy -v /data/ gdrive_clusterboxcloud:cb/$ENCRYPTEDTVFOLDER --size-only --config=/config/rclone.conf  --log-file=/logs/rclone.log" \
+-e SYNC_COMMAND="rclone move -v /source_folder/ gdrive_clusterboxcloud:cb/$ENCRYPTEDTVFOLDER --size-only" \
 that1guy/docker-rclone
 
 
