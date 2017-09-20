@@ -40,6 +40,8 @@ mkdir -p /home/$USER/docker/containers/jackett/config
 mkdir -p /home/$USER/docker/containers/jackett/blackhole
 mkdir -p /home/$USER/docker/containers/transmission/config
 mkdir -p /home/$USER/docker/containers/transmission/data
+mkdir -p /home/$USER/docker/containers/hydra/config
+mkdir -p /home/$USER/docker/containers/hydra/downloads
 mkdir -p /home/$USER/docker/containers/rclone.movie/logs
 mkdir -p /home/$USER/docker/containers/rclone.tv/logs
 mkdir -p /home/$USER/docker/containers/nginx-proxy/certs
@@ -84,6 +86,7 @@ docker rm -fv nzbget; docker run -d \
 -v /home/$USER/docker/downloads:/downloads \
 -v /home/$USER/storage:/storage \
 linuxserver/nzbget
+
 
 
 echo "Starting Plex Container..."
@@ -152,6 +155,18 @@ docker rm -fv transmission; docker run -d --cap-add=NET_ADMIN --device=/dev/net/
 haugene/transmission-openvpn
 
 
+echo "Starting NZB Hydra..."
+docker rm -fv hydra; docker run -d \
+--name=hydra \
+--link nzbget:nzbget \
+--link jackett:jackett \
+-v /home/cbuser/docker/containers/hydra/config:/config \
+-v /home/cbuser/docker/containers/hydra/downloads:/downloads \
+-e PGID=1000 -e PUID=1000 \
+-e TZ="America/Los Angeles" \
+-p 5075:5075 \
+linuxserver/hydra
+
 
 echo "Starting rclone.movie Container..."
 docker rm -fv rclone.movie; docker run -d \
@@ -172,6 +187,7 @@ docker rm -fv radarr; docker run -d \
 --link rclone.movie:rclone.movie \
 --link transmission:transmission \
 --link nzbget:nzbget \
+--link hydra:hydra \
 -v /home/$USER/docker/containers/radarr/config:/config \
 -v /home/$USER/storage:/storage \
 -v /home/$USER/docker/downloads:/downloads \
@@ -201,6 +217,7 @@ docker rm -fv sonarr; docker run -d \
 --link rclone.tv:rclone.tv \
 --link transmission:transmission \
 --link nzbget:nzbget \
+--link hydra:hydra \
 -p 8989:8989 \
 -e PUID=1000 -e PGID=1000 \
 -v /etc/localtime:/etc/localtime:ro \
@@ -318,6 +335,7 @@ docker rm -fv organizr; docker run -d \
 --link jackett:jackett \
 --link transmission:transmission \
 --link netdata:netdata \
+--link hydra:hydra \
 -v /home/$USER/docker/containers/organizr/config:/config \
 -e PUID=1000 -e PGID=1000 \
 -e VIRTUAL_HOST=portal.clusterboxcloud.com \
