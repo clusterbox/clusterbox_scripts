@@ -57,11 +57,8 @@ nohup plexdrive mount \
 -o allow_other \
 -v 3 \
 --root-node-id="0B9A6oZoGph2mZHhKdW42TzA1d0U" \
---chunk-check-threads=8 \
---chunk-load-ahead=6 \
---chunk-load-threads=16 \
---max-chunks=500 \
---chunk-size="10M" \
+--max-chunks=250 \
+--chunk-size="20M" \
 --uid=1000 \
 --gid=1000 \
 /home/$USER/mount/.gdrive_clusterbox > /home/$USER/mount/logs/plexdrive/plexdrive.log &

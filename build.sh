@@ -45,6 +45,10 @@ mkdir -p /home/$USER/docker/containers/hydra/downloads
 mkdir -p /home/$USER/docker/containers/rclone.movie/logs
 mkdir -p /home/$USER/docker/containers/rclone.tv/logs
 mkdir -p /home/$USER/docker/containers/nginx-proxy/certs
+mkdir -p /home/$USER/docker/containers/duplicati/config
+mkdir -p /home/$USER/docker/containers/owncloud/apps
+mkdir -p /home/$USER/docker/containers/owncloud/config
+mkdir -p /home/$USER/docker/containers/owncloud/data
 mkdir -p /home/$USER/docker/downloads/completed/movies
 mkdir -p /home/$USER/docker/downloads/completed/tv
 sudo chown -R $USER:$USER /home/$USER/docker
@@ -188,6 +192,7 @@ docker rm -fv radarr; docker run -d \
 --link transmission:transmission \
 --link nzbget:nzbget \
 --link hydra:hydra \
+--link plex:plex \
 -v /home/$USER/docker/containers/radarr/config:/config \
 -v /home/$USER/storage:/storage \
 -v /home/$USER/docker/downloads:/downloads \
@@ -218,6 +223,7 @@ docker rm -fv sonarr; docker run -d \
 --link transmission:transmission \
 --link nzbget:nzbget \
 --link hydra:hydra \
+--link plex:plex \
 -p 8989:8989 \
 -e PUID=1000 -e PGID=1000 \
 -v /etc/localtime:/etc/localtime:ro \
@@ -321,12 +327,33 @@ docker rm -fv netdata; docker run -d --cap-add SYS_PTRACE \
 titpetric/netdata:latest
 
 
+echo "Starting Duplicati..."
+docker rm -fv duplicati; docker run -d \
+--name=duplicati \
+-v /home/$USER/docker/containers/duplicati/config:/config \
+-v /home/$USER:/$USER \
+-e PUID=1000 -e PGID=1000 \
+-p 8200:8200 \
+linuxserver/duplicati:latest
+
+
+echo "Starting OwnCloud..."
+docker rm -fv owncloud; docker run -d \
+--name=owncloud \
+-v /home/$USER/docker/containers/owncloud/apps:/var/www/html/apps \
+-v /home/$USER/docker/containers/owncloud/config:/var/www/html/config \
+-v /home/$USER/docker/containers/owncloud/data:/var/www/html/data \
+-e PUID=1000 -e PGID=1000 \
+-p 8201:80 \
+owncloud:latest
+
 echo "Starting Organizr..."
 docker rm -fv organizr; docker run -d \
 --name=organizr \
 --link sonarr:sonarr \
 --link radarr:radarr \
 --link portainer:portainer \
+--link plex:plex \
 --link plexpy:plexpy \
 --link nzbget:nzbget \
 --link ombi:ombi \
@@ -336,6 +363,8 @@ docker rm -fv organizr; docker run -d \
 --link transmission:transmission \
 --link netdata:netdata \
 --link hydra:hydra \
+--link duplicati:duplicati \
+--link owncloud:owncloud \
 -v /home/$USER/docker/containers/organizr/config:/config \
 -e PUID=1000 -e PGID=1000 \
 -e VIRTUAL_HOST=portal.clusterboxcloud.com \
