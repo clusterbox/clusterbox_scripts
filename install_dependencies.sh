@@ -84,5 +84,11 @@ sudo chmod 755 /usr/bin/plexdrive
 
 sudo rm -R /home/$USER/tmp
 
+echo "Installing nload"
+sudo apt-get install nload
+
+echo "Installing nethogs"
+sudo apt-get install nethogs
+
 exit
 

@@ -22,7 +22,7 @@ while getopts ':k' opts; do
 done
 
 if [ "$KEEPMOUNTS" = false ] ; then
-    /bin/bash /home/$USER/scripts/mount.sh
+    /bin/bash /home/$USER/scripts/mount_plexdrive.sh
 fi
 
 
@@ -39,7 +39,6 @@ mkdir -p /home/$USER/docker/containers/ombi/config
 mkdir -p /home/$USER/docker/containers/jackett/config
 mkdir -p /home/$USER/docker/containers/jackett/blackhole
 mkdir -p /home/$USER/docker/containers/transmission/config
-mkdir -p /home/$USER/docker/containers/transmission/data
 mkdir -p /home/$USER/docker/containers/hydra/config
 mkdir -p /home/$USER/docker/containers/hydra/downloads
 mkdir -p /home/$USER/docker/containers/rclone.movie/logs
@@ -49,15 +48,18 @@ mkdir -p /home/$USER/docker/containers/duplicati/config
 mkdir -p /home/$USER/docker/containers/owncloud/apps
 mkdir -p /home/$USER/docker/containers/owncloud/config
 mkdir -p /home/$USER/docker/containers/owncloud/data
-mkdir -p /home/$USER/docker/downloads/completed/movies
-mkdir -p /home/$USER/docker/downloads/completed/tv
 sudo chown -R $USER:$USER /home/$USER/docker
+
+mkdir -p /home/$USER/downloads/nzbget/completed/movies
+mkdir -p /home/$USER/downloads/nzbget/completed/tv
+mkdir -p /home/$USER/downloads/transmission
+sudo chown -R $USER:$USER /home/$USER/downloads
 
 sudo mkdir -p /etc/nginx/certs
 sudo touch /etc/nginx/vhost.d
 mkdir -p /usr/share/nginx/html
 
-echo "Starting Nginx Proxy Container..."
+#echo "Starting Nginx Proxy Container..."
 docker rm -fv nginx-proxy; docker run -d \
 --name=nginx-proxy \
 -e DEFAULT_HOST=portal.clusterboxcloud.com \
@@ -87,7 +89,7 @@ docker rm -fv nzbget; docker run -d \
 -p 6789:6789 \
 -e PUID=1000 -e PGID=1000 \
 -v /home/$USER/docker/containers/nzbget/config:/config \
--v /home/$USER/docker/downloads:/downloads \
+-v /home/$USER/downloads/nzbget:/downloads \
 -v /home/$USER/storage:/storage \
 linuxserver/nzbget
 
@@ -102,15 +104,19 @@ docker rm -fv plex; docker run -d \
 -p 32469:32469/udp \
 -p 5353:5353/udp \
 -p 1900:1900/udp \
--e VIRTUAL_HOST=plex.clusterboxcloud.com \
--e VIRTUAL_PORT=32400 \
 -e PLEX_UID=1000 -e PLEX_GID=1000 \
 -e PUID=1000 -e PGID=1000 \
 -e TZ="America/Los Angeles" \
 -v /home/$USER/docker/containers/plex/config:/config \
 -v /home/$USER/docker/containers/plex/transcode:/transcode \
 -v /home/$USER/storage:/data \
+-e VIRTUAL_HOST=plex.clusterboxcloud.com \
+-e VIRTUAL_PORT=32400 \
 plexinc/pms-docker:plexpass
+
+#-e VIRTUAL_HOST=plex.clusterboxcloud.com \
+#-e VIRTUAL_PORT=32400 \
+
 
 
 echo "Starting PlexPy Container..."
@@ -151,7 +157,7 @@ docker rm -fv transmission; docker run -d --cap-add=NET_ADMIN --device=/dev/net/
 --restart="always" \
 --dns=8.8.8.8 \
 --dns=8.8.8.4 \
--v /home/cbuser/docker/containers/transmission/data:/data \
+-v /home/$USER/downloads/transmission:/data \
 -v /etc/localtime:/etc/localtime:ro \
 -e PUID=1000 -e PGID=1000 \
 --env-file /home/$USER/docker/containers/transmission/config/DockerEnv \
@@ -164,8 +170,8 @@ docker rm -fv hydra; docker run -d \
 --name=hydra \
 --link nzbget:nzbget \
 --link jackett:jackett \
--v /home/cbuser/docker/containers/hydra/config:/config \
--v /home/cbuser/docker/containers/hydra/downloads:/downloads \
+-v /home/$USER/docker/containers/hydra/config:/config \
+-v /home/$USER/docker/containers/hydra/downloads:/downloads \
 -e PGID=1000 -e PUID=1000 \
 -e TZ="America/Los Angeles" \
 -p 5075:5075 \
@@ -195,8 +201,8 @@ docker rm -fv radarr; docker run -d \
 --link plex:plex \
 -v /home/$USER/docker/containers/radarr/config:/config \
 -v /home/$USER/storage:/storage \
--v /home/$USER/docker/downloads:/downloads \
--v /home/$USER/docker/containers/transmission/data:/data \
+-v /home/$USER/downloads/nzbget:/downloads \
+-v /home/$USER/downloads/transmission:/data \
 -v /home/$USER/scripts:/scripts \
 -e PUID=1000 -e PGID=1000 \
 -e TZ="America/Los Angeles" \
@@ -229,8 +235,8 @@ docker rm -fv sonarr; docker run -d \
 -v /etc/localtime:/etc/localtime:ro \
 -v /home/$USER/docker/containers/sonarr/config:/config \
 -v /home/$USER/storage:/storage \
--v /home/$USER/docker/downloads:/downloads \
--v /home/$USER/docker/containers/transmission/data:/data \
+-v /home/$USER/downloads/nzbget:/downloads \
+-v /home/$USER/downloads/transmission:/data \
 -v /home/$USER/scripts:/scripts \
 linuxserver/sonarr
 
@@ -272,49 +278,59 @@ docker rm -fv harvester; docker run -d \
 -e "LOGIO_HARVESTER1STREAMNAME=docker" \
     -e "LOGIO_HARVESTER1LOGSTREAMS=/var/lib/docker/containers" \
     -e "LOGIO_HARVESTER1FILEPATTERN=*-json.log" \
--v /home/$USER/docker:/docker \
--e "LOGIO_HARVESTER2STREAMNAME=ombi" \
-    -e "LOGIO_HARVESTER2LOGSTREAMS=/docker/containers/ombi/config/logs" \
+-v /home/$USER/downloads:/downloads \
+-e "LOGIO_HARVESTER2STREAMNAME=nzbget" \
+    -e "LOGIO_HARVESTER2LOGSTREAMS=/downloads/nzbget" \
     -e "LOGIO_HARVESTER2FILEPATTERN=*.log" \
--e "LOGIO_HARVESTER3STREAMNAME=nzbGet_downloads" \
-    -e "LOGIO_HARVESTER3LOGSTREAMS=/docker/downloads" \
+-e "LOGIO_HARVESTER3STREAMNAME=transmission" \
+    -e "LOGIO_HARVESTER3LOGSTREAMS=/downloads/transmission" \
     -e "LOGIO_HARVESTER3FILEPATTERN=*.log" \
--e "LOGIO_HARVESTER4STREAMNAME=organizr" \
-    -e "LOGIO_HARVESTER4LOGSTREAMS=/docker/containers/organizr" \
+-v /home/$USER/docker:/docker \
+-e "LOGIO_HARVESTER4STREAMNAME=ombi" \
+    -e "LOGIO_HARVESTER4LOGSTREAMS=/docker/containers/ombi/config/logs" \
     -e "LOGIO_HARVESTER4FILEPATTERN=*.log" \
--e "LOGIO_HARVESTER5STREAMNAME=plex" \
-    -e "LOGIO_HARVESTER5LOGSTREAMS=/docker/containers/plex" \
-    -e "LOGIO_HARVESTER5FILEPATTERN=*.log *.txt" \
--e "LOGIO_HARVESTER6STREAMNAME=plexpy" \
-    -e "LOGIO_HARVESTER6LOGSTREAMS=/docker/containers/plexpy" \
-    -e "LOGIO_HARVESTER6FILEPATTERN=*.log" \
--e "LOGIO_HARVESTER7STREAMNAME=radarr" \
-    -e "LOGIO_HARVESTER7LOGSTREAMS=/docker/containers/radarr" \
-    -e "LOGIO_HARVESTER7FILEPATTERN=*.log *.txt" \
--e "LOGIO_HARVESTER8STREAMNAME=sonarr" \
-    -e "LOGIO_HARVESTER8LOGSTREAMS=/docker/containers/sonarr" \
+-e "LOGIO_HARVESTER5STREAMNAME=organizr" \
+    -e "LOGIO_HARVESTER5LOGSTREAMS=/docker/containers/organizr" \
+    -e "LOGIO_HARVESTER5FILEPATTERN=*.log" \
+-e "LOGIO_HARVESTER6STREAMNAME=plex" \
+    -e "LOGIO_HARVESTER6LOGSTREAMS=/docker/containers/plex" \
+    -e "LOGIO_HARVESTER6FILEPATTERN=*.log *.txt" \
+-e "LOGIO_HARVESTER7STREAMNAME=plexpy" \
+    -e "LOGIO_HARVESTER7LOGSTREAMS=/docker/containers/plexpy" \
+    -e "LOGIO_HARVESTER7FILEPATTERN=*.log" \
+-e "LOGIO_HARVESTER8STREAMNAME=radarr" \
+    -e "LOGIO_HARVESTER8LOGSTREAMS=/docker/containers/radarr" \
     -e "LOGIO_HARVESTER8FILEPATTERN=*.log *.txt" \
--e "LOGIO_HARVESTER9STREAMNAME=rclone_movie" \
-    -e "LOGIO_HARVESTER9LOGSTREAMS=/docker/containers/rclone.movie" \
-    -e "LOGIO_HARVESTER9FILEPATTERN=*.log" \
--e "LOGIO_HARVESTER10STREAMNAME=rclone_tv" \
-    -e "LOGIO_HARVESTER10LOGSTREAMS=/docker/containers/rclone.tv" \
+-e "LOGIO_HARVESTER9STREAMNAME=sonarr" \
+    -e "LOGIO_HARVESTER9LOGSTREAMS=/docker/containers/sonarr" \
+    -e "LOGIO_HARVESTER9FILEPATTERN=*.log *.txt" \
+-e "LOGIO_HARVESTER10STREAMNAME=rclone_movie" \
+    -e "LOGIO_HARVESTER10LOGSTREAMS=/docker/containers/rclone.movie" \
     -e "LOGIO_HARVESTER10FILEPATTERN=*.log" \
--v /home/$USER/mount:/mount \
--e "LOGIO_HARVESTER11STREAMNAME=plexdrive" \
-    -e "LOGIO_HARVESTER11LOGSTREAMS=/mount/logs/plexdrive" \
+-e "LOGIO_HARVESTER11STREAMNAME=rclone_tv" \
+    -e "LOGIO_HARVESTER11LOGSTREAMS=/docker/containers/rclone.tv" \
     -e "LOGIO_HARVESTER11FILEPATTERN=*.log" \
+-e "LOGIO_HARVESTER12STREAMNAME=hydra" \
+    -e "LOGIO_HARVESTER12LOGSTREAMS=/docker/containers/hydra" \
+    -e "LOGIO_HARVESTER12FILEPATTERN=*.log" \
+-v /home/$USER/config:/config \
+-e "LOGIO_HARVESTER13STREAMNAME=plexdrive" \
+    -e "LOGIO_HARVESTER13LOGSTREAMS=/config/plexdrive/logs" \
+    -e "LOGIO_HARVESTER13FILEPATTERN=*.log" \
+-e "LOGIO_HARVESTER14STREAMNAME=encfs" \
+    -e "LOGIO_HARVESTER14LOGSTREAMS=/config/encfs/logs" \
+    -e "LOGIO_HARVESTER14FILEPATTERN=*.log *.error" \
 --link logio:logio \
 --name harvester \
 --user root \
 blacklabelops/logio harvester
 
 
-echo "Starting Wetty Terminal..."
-docker rm -fv term; docker run -d \
---name term \
--p 3000 \
--dt krishnasrinivas/wetty
+#echo "Starting Wetty Terminal..."
+#docker rm -fv term; docker run -d \
+#--name term \
+#-p 3000 \
+#-dt krishnasrinivas/wetty
 
 
 echo "Starting Netdata..."
@@ -358,7 +374,6 @@ docker rm -fv organizr; docker run -d \
 --link nzbget:nzbget \
 --link ombi:ombi \
 --link logio:logio \
---link term:term \
 --link jackett:jackett \
 --link transmission:transmission \
 --link netdata:netdata \
@@ -374,6 +389,13 @@ docker rm -fv organizr; docker run -d \
 -p 29999:29999 \
 lsiocommunity/organizr
 
+#--link term:term \
+
+#-e VIRTUAL_HOST=portal.clusterboxcloud.com \
+#-e LETSENCRYPT_HOST=portal.clusterboxcloud.com \
+#-e LETSENCRYPT_EMAIL=clusterbox@clusterboxcloud.com \
+#-e HTTPS_METHOD=noredirect \
+#-p 29999:29999 \
 
 echo "******** ClusterBox Build Complete ********"
 

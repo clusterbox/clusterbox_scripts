@@ -5,11 +5,11 @@ USER=cbuser
 
 #Unmount any directories already mounted
 echo "mount.sh:  Unmounting all rsync and encrypted directories..."
-sudo /bin/fusermount -uz /home/$USER/mount/gdrive_clusterbox
-sudo umount -l /home/$USER/mount/gdrive_clusterbox
+sudo /bin/fusermount -uz /home/$USER/mount/plexdrive
+sudo umount -l /home/$USER/mount/plexdrive
 
-sudo /bin/fusermount -uz /home/$USER/mount/.gdrive_clusterbox
-sudo umount -l /home/$USER/mount/.gdrive_clusterbox
+sudo /bin/fusermount -uz /home/$USER/mount/.plexdrive
+sudo umount -l /home/$USER/mount/.plexdrive
 
 sudo /bin/fusermount -uz /home/$USER/mount/local
 sudo umount -l /home/$USER/mount/local
@@ -26,14 +26,14 @@ sleep 3s
 
 #Create folder structure where necessary
 echo "mount.sh:  Creating all necessary folder structures..."
-#rm -rf /home/$USER/mount/logs
-mkdir -p /home/$USER/mount/logs/plexdrive
+#rm -rf /home/$USER/config/plexdrive/logs
+mkdir -p /home/$USER/config/plexdrive/logs
 
-#rm -rf /home/$USER/mount/.gdrive_clusterbox
-mkdir -p /home/$USER/mount/.gdrive_clusterbox
+#rm -rf /home/$USER/mount/.plexdrive
+mkdir -p /home/$USER/mount/.plexdrive
 
-#rm -rf /home/$USER/mount/gdrive_clusterbox
-mkdir -p /home/$USER/mount/gdrive_clusterbox
+#rm -rf /home/$USER/mount/plexdrive
+mkdir -p /home/$USER/mount/plexdrive
 
 #rm -rf /home/$USER/mount/.local
 mkdir -p /home/$USER/mount/.local
@@ -61,7 +61,7 @@ nohup plexdrive mount \
 --chunk-size="20M" \
 --uid=1000 \
 --gid=1000 \
-/home/$USER/mount/.gdrive_clusterbox > /home/$USER/mount/logs/plexdrive/plexdrive.log &
+/home/$USER/mount/.plexdrive > /home/$USER/config/plexdrive/logs/plexdrive.log &
 echo "Wating 3s...."
 sleep 3s
  
@@ -69,8 +69,24 @@ sleep 3s
 
 #Mount encryption over these folders
 echo "mount.sh:  Encrypting all hidden directories..."
-ENCFS6_CONFIG='/home/'$USER'/encfs/encfs.xml' encfs -o allow_other --extpass="cat /home/"$USER"/encfs/encfspass" /home/$USER/mount/.gdrive_clusterbox /home/$USER/mount/gdrive_clusterbox
-ENCFS6_CONFIG='/home/'$USER'/encfs/encfs.xml' encfs -o allow_other --extpass="cat /home/"$USER"/encfs/encfspass" /home/$USER/mount/.local /home/$USER/mount/local
+
+ENCFS6_CONFIG='/home/'$USER'/config/encfs/encfs.xml' \
+nohup encfs \
+-o allow_other \
+--extpass="cat /home/"$USER"/config/encfs/encfspass" \
+-f -v \
+/home/$USER/mount/.plexdrive /home/$USER/mount/plexdrive \
+2> /home/$USER/config/encfs/logs/plexdrive_crypt.error 1> /home/$USER/config/encfs/logs/plexdrive_crypt.log &
+
+
+ENCFS6_CONFIG='/home/'$USER'/config/encfs/encfs.xml' \
+nohup encfs \
+-o allow_other \
+--extpass="cat /home/"$USER"/config/encfs/encfspass" \
+-f -v \
+/home/$USER/mount/.local /home/$USER/mount/local \
+2> /home/$USER/config/encfs/logs/local_crypt.error 1> /home/$USER/config/encfs/logs/local_crypt.log &
+
 echo "Wating 3s...."
 sleep 3s
 
@@ -81,7 +97,7 @@ sleep 3s
 echo "mount.sh:  Merging all directories with UnionFS..."
 unionfs-fuse \
 -o cow,allow_other \
-/home/$USER/mount/local=RW:/home/$USER/mount/gdrive_clusterbox=RO /home/$USER/storage/
+/home/$USER/mount/local=RW:/home/$USER/mount/plexdrive=RO /home/$USER/storage/
 echo "Wating 3s...."
 sleep 3s
 
