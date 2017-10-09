@@ -123,13 +123,18 @@ echo "Starting PlexPy Container..."
 docker rm -fv plexpy; docker run -d \
 --name=plexpy \
 --link plex:plex \
+--link nzbget:nzbget \
 -v /etc/localtime:/etc/localtime:ro \
 -v /home/$USER/docker/containers/plexpy/config:/config \
 -v /home/$USER/docker/containers/plex/config/Library/Application\ Support/Plex\ Media\ Server/Logs:/logs:ro \
+-v /home/$USER/scripts:/custom_scripts \
 -e PUID=$UID -e PGID=$GID \
 -p 8181:8181 \
 linuxserver/plexpy
 
+
+echo "Installing jsonrpclib-pelix in PlexPy Container"
+docker exec -it plexpy pip install jsonrpclib-pelix
 
 echo "Starting Portainer Container..."
 docker rm -fv portainer; docker run -d \
