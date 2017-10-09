@@ -198,7 +198,7 @@ if __name__ == '__main__':
     if p.stream_count:
         if p.stream_count and p.remote_transcode_speed:
             pass  # todo
-        if int(p.streamcount) >= int(p.max_transcode_sessions):
+        if int(p.stream_count) >= int(p.max_transcode_sessions):
             client.changespeed(p.speed)
         else:
             client.changespeed(p.max_speed)
@@ -208,5 +208,5 @@ if __name__ == '__main__':
             client.changespeed(p.speed)
         elif p.action == 'Buffer':
             client.pausefor(15)
-        elif p.action in ('Stop', 'Pause'):
+        elif p.action in ('Stop', 'Pause') and int(p.stream_count) < int(p.max_transcode_sessions):
             client.changespeed(p.max_speed)
