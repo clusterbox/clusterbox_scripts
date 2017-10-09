@@ -1,7 +1,8 @@
 #!/bin/sh
  
 USER=cbuser
-
+UID=1002
+GID=1002
 
 #Unmount any directories already mounted
 echo "mount.sh:  Unmounting all rsync and encrypted directories..."
@@ -53,15 +54,15 @@ sleep 3s
 
 ## Attempting to mount via plexdrive
 echo "mount.sh:  Initializing plexdrive..."
-nohup plexdrive mount \
+nohup \
+plexdrive mount \
 -o allow_other \
 -v 3 \
 --root-node-id="0B9A6oZoGph2mZHhKdW42TzA1d0U" \
---max-chunks=250 \
---chunk-size="20M" \
---uid=1000 \
---gid=1000 \
+--uid=$UID \
+--gid=$GID \
 /home/$USER/mount/.plexdrive > /home/$USER/config/plexdrive/logs/plexdrive.log &
+
 echo "Wating 3s...."
 sleep 3s
  
@@ -70,22 +71,36 @@ sleep 3s
 #Mount encryption over these folders
 echo "mount.sh:  Encrypting all hidden directories..."
 
+#ENCFS6_CONFIG='/home/'$USER'/config/encfs/encfs.xml' \
+#nohup encfs \
+#-o allow_other \
+#--extpass="cat /home/"$USER"/config/encfs/encfspass" \
+#-f -v \
+#/home/$USER/mount/.plexdrive /home/$USER/mount/plexdrive \
+#2> /home/$USER/config/encfs/logs/plexdrive_crypt.error 1> /home/$USER/config/encfs/logs/plexdrive_crypt.log &
+
 ENCFS6_CONFIG='/home/'$USER'/config/encfs/encfs.xml' \
-nohup encfs \
+encfs \
 -o allow_other \
 --extpass="cat /home/"$USER"/config/encfs/encfspass" \
--f -v \
 /home/$USER/mount/.plexdrive /home/$USER/mount/plexdrive \
-2> /home/$USER/config/encfs/logs/plexdrive_crypt.error 1> /home/$USER/config/encfs/logs/plexdrive_crypt.log &
 
+
+
+
+#ENCFS6_CONFIG='/home/'$USER'/config/encfs/encfs.xml' \
+#nohup encfs \
+#-o allow_other \
+#--extpass="cat /home/"$USER"/config/encfs/encfspass" \
+#-f -v \
+#/home/$USER/mount/.local /home/$USER/mount/local \
+#2> /home/$USER/config/encfs/logs/local_crypt.error 1> /home/$USER/config/encfs/logs/local_crypt.log &
 
 ENCFS6_CONFIG='/home/'$USER'/config/encfs/encfs.xml' \
-nohup encfs \
+encfs \
 -o allow_other \
 --extpass="cat /home/"$USER"/config/encfs/encfspass" \
--f -v \
 /home/$USER/mount/.local /home/$USER/mount/local \
-2> /home/$USER/config/encfs/logs/local_crypt.error 1> /home/$USER/config/encfs/logs/local_crypt.log &
 
 echo "Wating 3s...."
 sleep 3s

@@ -7,9 +7,12 @@
 #https://zackreed.me/docker-how-and-why-i-use-it/
 
 USER=cbuser
+UID=1002
+GID-1002
 KEEPMOUNTS=false
 ENCRYPTEDMOVIEFOLDER=IepOejn11g4nP5JHvRa6GShx
 ENCRYPTEDTVFOLDER=jCAtPeFmvjtPrlSeYLx5G2kd
+RCLONEDEST="gdrive_clusterboxcloud:cb"
 
 echo "Stopping and removing all docker containers..."
 docker rm -f $(docker ps -a -q)
@@ -44,6 +47,7 @@ mkdir -p /home/$USER/docker/containers/hydra/downloads
 mkdir -p /home/$USER/docker/containers/rclone.movie/logs
 mkdir -p /home/$USER/docker/containers/rclone.tv/logs
 mkdir -p /home/$USER/docker/containers/nginx-proxy/certs
+mkdir -p /home/$USER/docker/containers/netdata/config
 mkdir -p /home/$USER/docker/containers/duplicati/config
 mkdir -p /home/$USER/docker/containers/owncloud/apps
 mkdir -p /home/$USER/docker/containers/owncloud/config
@@ -59,7 +63,7 @@ sudo mkdir -p /etc/nginx/certs
 sudo touch /etc/nginx/vhost.d
 mkdir -p /usr/share/nginx/html
 
-#echo "Starting Nginx Proxy Container..."
+echo "Starting Nginx Proxy Container..."
 docker rm -fv nginx-proxy; docker run -d \
 --name=nginx-proxy \
 -e DEFAULT_HOST=portal.clusterboxcloud.com \
@@ -73,13 +77,13 @@ docker rm -fv nginx-proxy; docker run -d \
 jwilder/nginx-proxy:alpine
 
 
-#echo "Starting Nginx LetsEncrypt Container..."
-#docker rm -fv nginx-proxy-lets-encrypt; docker run -d \
-#--name=nginx-proxy-lets-encrypt \
-#-v /home/$USER/docker/containers/nginx-proxy/certs:/etc/nginx/certs:rw \
-#-v /var/run/docker.sock:/var/run/docker.sock:ro \
-#--volumes-from nginx-proxy \
-#jrcs/letsencrypt-nginx-proxy-companion
+echo "Starting Nginx LetsEncrypt Container..."
+docker rm -fv nginx-proxy-lets-encrypt; docker run -d \
+--name=nginx-proxy-lets-encrypt \
+-v /home/$USER/docker/containers/nginx-proxy/certs:/etc/nginx/certs:rw \
+-v /var/run/docker.sock:/var/run/docker.sock:ro \
+--volumes-from nginx-proxy \
+jrcs/letsencrypt-nginx-proxy-companion
 
 
 
@@ -87,7 +91,7 @@ echo "Starting NZBget Container..."
 docker rm -fv nzbget; docker run -d \
 --name nzbget \
 -p 6789:6789 \
--e PUID=1000 -e PGID=1000 \
+-e PUID=$UID -e PGID=$GID \
 -v /home/$USER/docker/containers/nzbget/config:/config \
 -v /home/$USER/downloads/nzbget:/downloads \
 -v /home/$USER/storage:/storage \
@@ -104,8 +108,8 @@ docker rm -fv plex; docker run -d \
 -p 32469:32469/udp \
 -p 5353:5353/udp \
 -p 1900:1900/udp \
--e PLEX_UID=1000 -e PLEX_GID=1000 \
--e PUID=1000 -e PGID=1000 \
+-e PLEX_UID=$UID -e PLEX_GID=$GID \
+-e PUID=$UID -e PGID=$GID \
 -e TZ="America/Los Angeles" \
 -v /home/$USER/docker/containers/plex/config:/config \
 -v /home/$USER/docker/containers/plex/transcode:/transcode \
@@ -113,10 +117,6 @@ docker rm -fv plex; docker run -d \
 -e VIRTUAL_HOST=plex.clusterboxcloud.com \
 -e VIRTUAL_PORT=32400 \
 plexinc/pms-docker:plexpass
-
-#-e VIRTUAL_HOST=plex.clusterboxcloud.com \
-#-e VIRTUAL_PORT=32400 \
-
 
 
 echo "Starting PlexPy Container..."
@@ -126,7 +126,7 @@ docker rm -fv plexpy; docker run -d \
 -v /etc/localtime:/etc/localtime:ro \
 -v /home/$USER/docker/containers/plexpy/config:/config \
 -v /home/$USER/docker/containers/plex/config/Library/Application\ Support/Plex\ Media\ Server/Logs:/logs:ro \
--e PUID=1000 -e PGID=1000 \
+-e PUID=$UID -e PGID=$GID \
 -p 8181:8181 \
 linuxserver/plexpy
 
@@ -144,7 +144,7 @@ docker rm -fv jackett; docker run -d \
 --name=jackett \
 -v /home/$USER/docker/containers/jackett/config:/config \
 -v /home/$USER/docker/containers/jackett/blackhole:/downloads \
--e PUID=1000 -e PGID=1000 \
+-e PUID=$UID -e PGID=$GID \
 -e TZ="America/Los Angeles" \
 -v /etc/localtime:/etc/localtime:ro \
 -p 9117:9117 \
@@ -159,7 +159,7 @@ docker rm -fv transmission; docker run -d --cap-add=NET_ADMIN --device=/dev/net/
 --dns=8.8.8.4 \
 -v /home/$USER/downloads/transmission:/data \
 -v /etc/localtime:/etc/localtime:ro \
--e PUID=1000 -e PGID=1000 \
+-e PUID=$UID -e PGID=$GID \
 --env-file /home/$USER/docker/containers/transmission/config/DockerEnv \
 -p 9091:9091 \
 haugene/transmission-openvpn
@@ -172,7 +172,7 @@ docker rm -fv hydra; docker run -d \
 --link jackett:jackett \
 -v /home/$USER/docker/containers/hydra/config:/config \
 -v /home/$USER/docker/containers/hydra/downloads:/downloads \
--e PGID=1000 -e PUID=1000 \
+-e PGID=$GID -e PUID=$UID \
 -e TZ="America/Los Angeles" \
 -p 5075:5075 \
 linuxserver/hydra
@@ -182,11 +182,13 @@ echo "Starting rclone.movie Container..."
 docker rm -fv rclone.movie; docker run -d \
 --name=rclone.movie \
 -p 8081:8080 \
+-v /home/$USER/.config/rclone:/rclone \
+-v /home/$USER/mount/local:/local \
 -v /home/$USER/mount/local/movies:/local_media \
 -v /home/$USER/mount/.local/$ENCRYPTEDMOVIEFOLDER:/source_folder \
--v /home/$USER/.config/rclone:/config \
 -v /home/$USER/docker/containers/rclone.movie/logs:/logs \
--e SYNC_COMMAND="rclone move -v /source_folder/ gdrive_clusterboxcloud:cb/$ENCRYPTEDMOVIEFOLDER --size-only" \
+-v /home/$USER/mount/plexdrive:/plexdrive \
+-e SYNC_COMMAND="rclone move -v /source_folder/ $RCLONEDEST/$ENCRYPTEDMOVIEFOLDER --size-only" \
 that1guy/docker-rclone
 
 
@@ -204,7 +206,7 @@ docker rm -fv radarr; docker run -d \
 -v /home/$USER/downloads/nzbget:/downloads \
 -v /home/$USER/downloads/transmission:/data \
 -v /home/$USER/scripts:/scripts \
--e PUID=1000 -e PGID=1000 \
+-e PUID=$UID -e PGID=$GID \
 -e TZ="America/Los Angeles" \
 -p 7878:7878 \
 linuxserver/radarr
@@ -214,11 +216,14 @@ echo "Starting rclone.tv Container..."
 docker rm -fv rclone.tv; docker run -d \
 --name=rclone.tv \
 -p 8082:8080 \
+-v /home/$USER/.config/rclone:/rclone \
+-v /home/$USER/mount/local:/local \
 -v /home/$USER/mount/local/tv:/local_media \
 -v /home/$USER/mount/.local/$ENCRYPTEDTVFOLDER:/source_folder \
--v /home/$USER/.config/rclone:/config \
 -v /home/$USER/docker/containers/rclone.tv/logs:/logs \
--e SYNC_COMMAND="rclone move -v /source_folder/ gdrive_clusterboxcloud:cb/$ENCRYPTEDTVFOLDER --size-only" \
+-v /home/$USER/mount/plexdrive:/plexdrive \
+-e SYNC_COMMAND="rclone move -v /source_folder/ $RCLONEDEST/$ENCRYPTEDTVFOLDER --size-only" \
+-e CRON_SCHEDULE="* * * * *" \
 that1guy/docker-rclone
 
 
@@ -231,7 +236,7 @@ docker rm -fv sonarr; docker run -d \
 --link hydra:hydra \
 --link plex:plex \
 -p 8989:8989 \
--e PUID=1000 -e PGID=1000 \
+-e PUID=$UID -e PGID=$GID \
 -v /etc/localtime:/etc/localtime:ro \
 -v /home/$USER/docker/containers/sonarr/config:/config \
 -v /home/$USER/storage:/storage \
@@ -249,7 +254,7 @@ docker rm -fv ombi; docker run -d \
 --link plex:plex \
 -v /etc/localtime:/etc/localtime:ro \
 -v /home/$USER/docker/containers/ombi/config:/config \
--e PUID=1000 -e PGID=1000 \
+-e PUID=$UID -e PGID=$GID \
 -e TZ="America/Los Angeles" \
 -p 3579:3579 \
 linuxserver/ombi
@@ -273,8 +278,8 @@ blacklabelops/logio
 
 echo "Starting Log.io Harvester..."
 docker rm -fv harvester; docker run -d \
--v /var/lib/docker/containers:/var/lib/docker/containers \
 --restart="always" \
+-v /var/lib/docker/containers:/var/lib/docker/containers \
 -e "LOGIO_HARVESTER1STREAMNAME=docker" \
     -e "LOGIO_HARVESTER1LOGSTREAMS=/var/lib/docker/containers" \
     -e "LOGIO_HARVESTER1FILEPATTERN=*-json.log" \
@@ -326,6 +331,7 @@ docker rm -fv harvester; docker run -d \
 blacklabelops/logio harvester
 
 
+
 #echo "Starting Wetty Terminal..."
 #docker rm -fv term; docker run -d \
 #--name term \
@@ -339,6 +345,7 @@ docker rm -fv netdata; docker run -d --cap-add SYS_PTRACE \
 -v /proc:/host/proc:ro \
 -v /sys:/host/sys:ro \
 -v /var/run/docker.sock:/var/run/docker.sock \
+-v /home/$USER/docker/containers/netdata/config:/etc/netdata \
 -p 19999:19999 \
 titpetric/netdata:latest
 
@@ -348,7 +355,7 @@ docker rm -fv duplicati; docker run -d \
 --name=duplicati \
 -v /home/$USER/docker/containers/duplicati/config:/config \
 -v /home/$USER:/$USER \
--e PUID=1000 -e PGID=1000 \
+-e PUID=$UID -e PGID=$GID \
 -p 8200:8200 \
 linuxserver/duplicati:latest
 
@@ -359,7 +366,7 @@ docker rm -fv owncloud; docker run -d \
 -v /home/$USER/docker/containers/owncloud/apps:/var/www/html/apps \
 -v /home/$USER/docker/containers/owncloud/config:/var/www/html/config \
 -v /home/$USER/docker/containers/owncloud/data:/var/www/html/data \
--e PUID=1000 -e PGID=1000 \
+-e PUID=$UID -e PGID=$GID \
 -p 8201:80 \
 owncloud:latest
 
@@ -381,7 +388,7 @@ docker rm -fv organizr; docker run -d \
 --link duplicati:duplicati \
 --link owncloud:owncloud \
 -v /home/$USER/docker/containers/organizr/config:/config \
--e PUID=1000 -e PGID=1000 \
+-e PUID=$UID -e PGID=$GID \
 -e VIRTUAL_HOST=portal.clusterboxcloud.com \
 -e LETSENCRYPT_HOST=portal.clusterboxcloud.com \
 -e LETSENCRYPT_EMAIL=clusterbox@clusterboxcloud.com \
@@ -390,12 +397,6 @@ docker rm -fv organizr; docker run -d \
 lsiocommunity/organizr
 
 #--link term:term \
-
-#-e VIRTUAL_HOST=portal.clusterboxcloud.com \
-#-e LETSENCRYPT_HOST=portal.clusterboxcloud.com \
-#-e LETSENCRYPT_EMAIL=clusterbox@clusterboxcloud.com \
-#-e HTTPS_METHOD=noredirect \
-#-p 29999:29999 \
 
 echo "******** ClusterBox Build Complete ********"
 

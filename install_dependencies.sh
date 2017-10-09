@@ -87,8 +87,11 @@ sudo rm -R /home/$USER/tmp
 echo "Installing nload"
 sudo apt-get install nload
 
-echo "Installing nethogs"
+echo "Installing nethogs..."
 sudo apt-get install nethogs
+
+echo "Installing Nano..."
+sudo apt-get install nano
 
 exit
 
