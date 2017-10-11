@@ -38,7 +38,8 @@ mkdir -p /home/$USER/docker/containers/portainer/config
 mkdir -p /home/$USER/docker/containers/radarr/config
 mkdir -p /home/$USER/docker/containers/sonarr/config
 mkdir -p /home/$USER/docker/containers/organizr/config
-mkdir -p /home/$USER/docker/containers/ombi/config
+mkdir -p /home/$USER/docker/containers/ombi/v2/config
+mkdir -p /home/$USER/docker/containers/ombi/v3/config
 mkdir -p /home/$USER/docker/containers/jackett/config
 mkdir -p /home/$USER/docker/containers/jackett/blackhole
 mkdir -p /home/$USER/docker/containers/transmission/config
@@ -251,18 +252,34 @@ docker rm -fv sonarr; docker run -d \
 linuxserver/sonarr
 
 
-echo "Starting Ombi..."
+#echo "Starting Ombi V2..."
+#docker rm -fv ombi; docker run -d \
+#--name=ombi \
+#--link radarr:radarr \
+#--link sonarr:sonarr \
+#--link plex:plex \
+#-v /etc/localtime:/etc/localtime:ro \
+#-v /home/$USER/docker/containers/ombi/v2/config:/config \
+#-e PUID=$UID -e PGID=$GID \
+#-e TZ="America/Los Angeles" \
+#-p 3579:3579 \
+#linuxserver/ombi
+
+
+
+
+echo "Starting Ombi V3..."
 docker rm -fv ombi; docker run -d \
 --name=ombi \
 --link radarr:radarr \
 --link sonarr:sonarr \
 --link plex:plex \
 -v /etc/localtime:/etc/localtime:ro \
--v /home/$USER/docker/containers/ombi/config:/config \
+-v /home/$USER/docker/containers/ombi/v3/config:/config \
 -e PUID=$UID -e PGID=$GID \
 -e TZ="America/Los Angeles" \
 -p 3579:3579 \
-linuxserver/ombi
+lsiodev/ombi-preview
 
 
 echo "Starting Watchtower..."
@@ -297,7 +314,7 @@ docker rm -fv harvester; docker run -d \
     -e "LOGIO_HARVESTER3FILEPATTERN=*.log" \
 -v /home/$USER/docker:/docker \
 -e "LOGIO_HARVESTER4STREAMNAME=ombi" \
-    -e "LOGIO_HARVESTER4LOGSTREAMS=/docker/containers/ombi/config/logs" \
+    -e "LOGIO_HARVESTER4LOGSTREAMS=/docker/containers/ombi/v2/config/logs" \
     -e "LOGIO_HARVESTER4FILEPATTERN=*.log" \
 -e "LOGIO_HARVESTER5STREAMNAME=organizr" \
     -e "LOGIO_HARVESTER5LOGSTREAMS=/docker/containers/organizr" \
