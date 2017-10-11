@@ -352,8 +352,7 @@ docker rm -fv netdata; docker run -d --cap-add SYS_PTRACE \
 -v /var/run/docker.sock:/var/run/docker.sock \
 -v /home/$USER/docker/containers/netdata/config:/etc/netdata \
 -p 19999:19999 \
-titpetric/netdata:latest
-
+firehol/netdata:latest
 
 echo "Starting Duplicati..."
 docker rm -fv duplicati; docker run -d \
