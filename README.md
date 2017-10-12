@@ -21,9 +21,6 @@ Note: Instructions below are for migrating an existing install between servers (
 //Add our new user to the docker group
 - `$sudo usermod -aG docker your_user`
 
-//Rename the scripts git folder (suggested)
-- `$mv clusterbox_scripts/ ~/scripts`
-
 //uncomment user_allow_other from fuse settings
 - `$sudo nano /etc/fuse.conf`
 
