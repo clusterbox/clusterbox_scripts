@@ -4,13 +4,13 @@ Clusterbox is a homelab project that uses https://www.linuxserver.io/ Docker con
 
 Note: Instructions below are for migrating an existing install between servers (No instructions for cold install, yet).
 
-## Step 1: Setup user and install core dependencies on *new* server
+## Step 1: Setup user and install core dependencies on *new* server (Ubuntu 16.04)
 
-//Create a new cbuser on the new server
-- `$adduser cbuser`
+//Create a user on the new server
+- `$adduser your_user`
 
-//Add cbuser to sudo group
-- `$usermod -aG sudo cbuser`
+//Add your_user to the sudo group
+- `$usermod -aG sudo your_user`
 
 //Install git
 - `$sudo apt-get install git`
@@ -19,7 +19,7 @@ Note: Instructions below are for migrating an existing install between servers (
 - `$git clone https://github.com/clusterbox/clusterbox_scripts.git`
 
 //Add our new user to the docker group
-- `$sudo usermod -aG docker cbuser`
+- `$sudo usermod -aG docker your_user`
 
 //Rename the scripts git folder (suggested)
 - `$mv clusterbox_scripts/ ~/scripts`
@@ -33,16 +33,16 @@ Note: Instructions below are for migrating an existing install between servers (
 
 ## Step 2: Transfer home directory from old server to new server.
 //Create zip file we transfer on the new server
-- `#sudo zip -r -v cbuser.zip /home/cbuser`
+- `#sudo zip -r -v your_user.zip /home/your_user`
 
 //Rsync zip file to new the server
-- `$rsync -avP cbuser.zip cbuser@new_server_ip:/home/cbuser`
+- `$rsync -avP your_user.zip your_user@new_server_ip:/home/your_user`
 
 //Unpack the zip file on the new server
-- `$unzip cbuser.zip -d /home/cbuser`
+- `$unzip your_user.zip -d /home/your_user`
 
 //Start all our docker containers
-- `$./home/cbuser/scripts/build_clusterbox.sh`
+- `$./home/your_user/scripts/build_clusterbox.sh`
 
 //Profit
 Point your browser to server IP or configure DNS.
@@ -55,5 +55,5 @@ You'll need to make sure you're running the generic ubuntu kernel (not custom). 
 https://github.com/moby/moby/issues/29798#issuecomment-286227359
 
 - I have no idea why, but sometimes after transferring the zip file and decompressing, files area still missing from hidden plexdrive and rclone folders.  Here's how you grab them from the old remote server.
-`$rsync -chavzP --stats cbuser@_IP_OLD_SERVER:/home/cbuser/.plexdrive/ /home/cbuser/.plexdrive`
-`$rsync -chavzP --stats cbuser@_IP_OLD_SERVER:/home/cbuser/.config/ /home/cbuser/.config`
+`$rsync -chavzP --stats your_user@_IP_OLD_SERVER:/home/your_user/.plexdrive/ /home/your_user/.plexdrive`
+`$rsync -chavzP --stats your_user@_IP_OLD_SERVER:/home/your_user/.config/ /home/your_user/.config`
