@@ -92,7 +92,7 @@ jrcs/letsencrypt-nginx-proxy-companion
 echo "Starting NZBget Container..."
 docker rm -fv nzbget; docker run -d \
 --name nzbget \
--p 6789:6789 \
+-p 127.0.0.1:6789:6789 \
 -e PUID=$USERID -e PGID=$GROUPID \
 -v /home/$USERNAME/docker/containers/nzbget/config:/config \
 -v /home/$USERNAME/downloads/nzbget:/downloads \
@@ -131,7 +131,7 @@ docker rm -fv plexpy; docker run -d \
 -v /home/$USERNAME/docker/containers/plex/config/Library/Application\ Support/Plex\ Media\ Server/Logs:/logs:ro \
 -v /home/$USERNAME/scripts:/custom_scripts \
 -e PUID=$USERID -e PGID=$GROUPID \
--p 8181:8181 \
+-p 127.0.0.1:8181:8181 \
 linuxserver/plexpy
 
 
@@ -141,7 +141,7 @@ docker exec -it plexpy pip install jsonrpclib-pelix
 echo "Starting Portainer Container..."
 docker rm -fv portainer; docker run -d \
 --name=portainer \
--p 9000:9000 \
+-p 127.0.0.1:9000:9000 \
 -v /home/$USERNAME/docker/containers/portainer/config:/data \
 -v /var/run/docker.sock:/var/run/docker.sock portainer/portainer
 
@@ -154,7 +154,7 @@ docker rm -fv jackett; docker run -d \
 -e PUID=$USERID -e PGID=$GROUPID \
 -e TZ="America/Los Angeles" \
 -v /etc/localtime:/etc/localtime:ro \
--p 9117:9117 \
+-p 127.0.0.1:9117:9117 \
 linuxserver/jackett
 
 
@@ -168,7 +168,7 @@ docker rm -fv transmission; docker run -d --cap-add=NET_ADMIN --device=/dev/net/
 -v /etc/localtime:/etc/localtime:ro \
 -e PUID=$USERID -e PGID=$GROUPID \
 --env-file /home/$USERNAME/docker/containers/transmission/config/DockerEnv \
--p 9091:9091 \
+-p 127.0.0.1:9091:9091 \
 haugene/transmission-openvpn
 
 
@@ -181,14 +181,14 @@ docker rm -fv hydra; docker run -d \
 -v /home/$USERNAME/docker/containers/hydra/downloads:/downloads \
 -e PGID=$GROUPID -e PUID=$USERID \
 -e TZ="America/Los Angeles" \
--p 5075:5075 \
+-p 127.0.0.1:5075:5075 \
 linuxserver/hydra
 
 
 echo "Starting rclone.movie Container..."
 docker rm -fv rclone.movie; docker run -d \
 --name=rclone.movie \
--p 8081:8080 \
+-p 127.0.0.1:8081:8080 \
 -v /home/$USERNAME/.config/rclone:/rclone \
 -v /home/$USERNAME/mount/local:/local \
 -v /home/$USERNAME/mount/local/movies:/local_media \
@@ -215,14 +215,14 @@ docker rm -fv radarr; docker run -d \
 -v /home/$USERNAME/scripts:/scripts \
 -e PUID=$USERID -e PGID=$GROUPID \
 -e TZ="America/Los Angeles" \
--p 7878:7878 \
+-p 127.0.0.1:7878:7878 \
 linuxserver/radarr
 
 
 echo "Starting rclone.tv Container..."
 docker rm -fv rclone.tv; docker run -d \
 --name=rclone.tv \
--p 8082:8080 \
+-p 127.0.0.1:8082:8080 \
 -v /home/$USERNAME/.config/rclone:/rclone \
 -v /home/$USERNAME/mount/local:/local \
 -v /home/$USERNAME/mount/local/tv:/local_media \
@@ -242,7 +242,7 @@ docker rm -fv sonarr; docker run -d \
 --link nzbget:nzbget \
 --link hydra:hydra \
 --link plex:plex \
--p 8989:8989 \
+-p 127.0.0.1:8989:8989 \
 -e PUID=$USERID -e PGID=$GROUPID \
 -v /etc/localtime:/etc/localtime:ro \
 -v /home/$USERNAME/docker/containers/sonarr/config:/config \
@@ -263,7 +263,7 @@ linuxserver/sonarr
 #-v /home/$USERNAME/docker/containers/ombi/v2/config:/config \
 #-e PUID=$USERID -e PGID=$GROUPID \
 #-e TZ="America/Los Angeles" \
-#-p 3579:3579 \
+#-p 127.0.0.1:3579:3579 \
 #linuxserver/ombi
 
 
@@ -279,7 +279,7 @@ docker rm -fv ombi; docker run -d \
 -v /home/$USERNAME/docker/containers/ombi/v3/config:/config \
 -e PUID=$USERID -e PGID=$GROUPID \
 -e TZ="America/Los Angeles" \
--p 3579:3579 \
+-p 127.0.0.1:3579:3579 \
 lsiodev/ombi-preview
 
 
@@ -292,7 +292,7 @@ v2tec/watchtower --interval 60 --cleanup
 
 echo "Starting Log.io..."
 docker rm -fv logio; docker run -d \
--p 28778:28778 \
+-p 127.0.0.1:28778:28778 \
 -e "LOGIO_ADMIN_USER=clusterbox" \
 -e "LOGIO_ADMIN_PASSWORD=4letterword" \
 --name logio \
@@ -358,7 +358,7 @@ blacklabelops/logio harvester
 #echo "Starting Wetty Terminal..."
 #docker rm -fv term; docker run -d \
 #--name term \
-#-p 3000 \
+#-p 127.0.0.1:3000:3000 \
 #-dt krishnasrinivas/wetty
 
 
@@ -368,7 +368,7 @@ docker rm -fv netdata; docker run -d --cap-add SYS_PTRACE \
 -v /proc:/host/proc:ro \
 -v /sys:/host/sys:ro \
 -v /var/run/docker.sock:/var/run/docker.sock \
--p 19999:19999 \
+-p 127.0.0.1:1999:1999 \
 firehol/netdata:latest
 
 #-v /home/$USERNAME/docker/containers/netdata/config:/etc/netdata \
@@ -379,7 +379,7 @@ docker rm -fv duplicati; docker run -d \
 -v /home/$USERNAME/docker/containers/duplicati/config:/config \
 -v /home/$USERNAME:/$USERNAME \
 -e PUID=$USERID -e PGID=$GROUPID \
--p 8200:8200 \
+-p 127.0.0.1:8200:8200 \
 linuxserver/duplicati:latest
 
 
@@ -390,7 +390,7 @@ docker rm -fv owncloud; docker run -d \
 -v /home/$USERNAME/docker/containers/owncloud/config:/var/www/html/config \
 -v /home/$USERNAME/docker/containers/owncloud/data:/var/www/html/data \
 -e PUID=$USERID -e PGID=$GROUPID \
--p 8201:80 \
+-p 127.0.0.1:8201:80 \
 owncloud:latest
 
 echo "Starting Organizr..."
@@ -416,7 +416,7 @@ docker rm -fv organizr; docker run -d \
 -e LETSENCRYPT_HOST=portal.clusterboxcloud.com \
 -e LETSENCRYPT_EMAIL=clusterbox@clusterboxcloud.com \
 -e HTTPS_METHOD=noredirect \
--p 29999:29999 \
+-p 127.0.0.1:29999:29999 \
 lsiocommunity/organizr
 
 #--link term:term \
