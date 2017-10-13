@@ -54,6 +54,7 @@ mkdir -p /home/$USERNAME/docker/containers/duplicati/config
 mkdir -p /home/$USERNAME/docker/containers/owncloud/apps
 mkdir -p /home/$USERNAME/docker/containers/owncloud/config
 mkdir -p /home/$USERNAME/docker/containers/owncloud/data
+mkdir -p /home/$USERNAME/docker/containers/owncloud/lib
 sudo chown -R $USERNAME:$USERNAME /home/$USERNAME/docker
 
 mkdir -p /home/$USERNAME/downloads/nzbget/completed/movies
@@ -389,7 +390,12 @@ docker rm -fv owncloud; docker run -d \
 -v /home/$USERNAME/docker/containers/owncloud/apps:/var/www/html/apps \
 -v /home/$USERNAME/docker/containers/owncloud/config:/var/www/html/config \
 -v /home/$USERNAME/docker/containers/owncloud/data:/var/www/html/data \
+-v /home/$USERNAME/docker/containers/owncloud/lib:/var/www/html/lib \
 -e PUID=$USERID -e PGID=$GROUPID \
+-e VIRTUAL_HOST=owncloud.clusterboxcloud.com \
+-e LETSENCRYPT_HOST=owncloud.clusterboxcloud.com \
+-e LETSENCRYPT_EMAIL=clusterbox@clusterboxcloud.com \
+-e HTTPS_METHOD=noredirect \
 -p 127.0.0.1:8201:80 \
 owncloud:latest
 
