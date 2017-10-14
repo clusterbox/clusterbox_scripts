@@ -49,6 +49,7 @@ mkdir -p /home/$USERNAME/docker/containers/hydra/downloads
 mkdir -p /home/$USERNAME/docker/containers/rclone.movie/logs
 mkdir -p /home/$USERNAME/docker/containers/rclone.tv/logs
 mkdir -p /home/$USERNAME/docker/containers/nginx-proxy/certs
+mkdir -p /home/$USERNAME/docker/containers/nginx-proxy/conf.d
 mkdir -p /home/$USERNAME/docker/containers/netdata/config
 mkdir -p /home/$USERNAME/docker/containers/duplicati/config
 mkdir -p /home/$USERNAME/docker/containers/owncloud/apps
@@ -72,6 +73,7 @@ docker rm -fv nginx-proxy; docker run -d \
 -p 80:80 \
 -p 443:443 \
 -v /home/$USERNAME/docker/containers/nginx-proxy/certs:/etc/nginx/certs:ro \
+-v /home/$USERNAME/docker/containers/nginx-proxy/conf.d:/etc/nginx/conf.d \
 -v /etc/nginx/vhost.d \
 -v /usr/share/nginx/html \
 -v /var/run/docker.sock:/tmp/docker.sock:ro \
