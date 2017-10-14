@@ -54,7 +54,6 @@ mkdir -p /home/$USERNAME/docker/containers/duplicati/config
 mkdir -p /home/$USERNAME/docker/containers/owncloud/apps
 mkdir -p /home/$USERNAME/docker/containers/owncloud/config
 mkdir -p /home/$USERNAME/docker/containers/owncloud/data
-mkdir -p /home/$USERNAME/docker/containers/owncloud/lib
 sudo chown -R $USERNAME:$USERNAME /home/$USERNAME/docker
 
 mkdir -p /home/$USERNAME/downloads/nzbget/completed/movies
@@ -135,9 +134,6 @@ docker rm -fv plexpy; docker run -d \
 -p 127.0.0.1:8181:8181 \
 linuxserver/plexpy
 
-
-echo "Installing jsonrpclib-pelix in PlexPy Container"
-docker exec -it plexpy pip install jsonrpclib-pelix
 
 echo "Starting Portainer Container..."
 docker rm -fv portainer; docker run -d \
@@ -390,7 +386,6 @@ docker rm -fv owncloud; docker run -d \
 -v /home/$USERNAME/docker/containers/owncloud/apps:/var/www/html/apps \
 -v /home/$USERNAME/docker/containers/owncloud/config:/var/www/html/config \
 -v /home/$USERNAME/docker/containers/owncloud/data:/var/www/html/data \
--v /home/$USERNAME/docker/containers/owncloud/lib:/var/www/html/lib \
 -e PUID=$USERID -e PGID=$GROUPID \
 -e VIRTUAL_HOST=owncloud.clusterboxcloud.com \
 -e LETSENCRYPT_HOST=owncloud.clusterboxcloud.com \
@@ -398,6 +393,7 @@ docker rm -fv owncloud; docker run -d \
 -e HTTPS_METHOD=noredirect \
 -p 127.0.0.1:8201:80 \
 owncloud:latest
+
 
 echo "Starting Organizr..."
 docker rm -fv organizr; docker run -d \
@@ -426,6 +422,16 @@ docker rm -fv organizr; docker run -d \
 lsiocommunity/organizr
 
 #--link term:term \
+
+
+echo "MODIFICATION: Installing jsonrpclib-pelix in PlexPy Container"
+docker exec -it plexpy pip install jsonrpclib-pelix
+
+
+echo "MODIFICATION: Disabling SAMEORIGIN header for OwnCloud..."
+#sudo sed -i '/SAMEORIGIN/s/^/#/g' /home/cbuser/docker/containers/owncloud/lib/private/legacy/response.php
+docker exec -it owncloud sed -i '/SAMEORIGIN/s/^/#/g' /var/www/html/lib/private/legacy/response.php
+
 
 echo "******** ClusterBox Build Complete ********"
 
