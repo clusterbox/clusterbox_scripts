@@ -6,6 +6,8 @@
 #Source instructions for Dockerizing Clusterbox
 #https://zackreed.me/docker-how-and-why-i-use-it/
 
+echo "******** ClusterBox Build Starting ********"
+echo "Grabbing config variables..."
 source ~/config/variables.sh
 
 echo "Stopping and removing all docker containers..."
@@ -62,7 +64,7 @@ sudo mkdir -p /usr/share/nginx/html
 echo "Starting Nginx Proxy Container..."
 docker rm -fv nginx-proxy; docker run -d \
 --name=nginx-proxy \
--e DEFAULT_HOST=portal.clusterbox.net \
+-e DEFAULT_HOST=portal.$DOMAIN \
 -p 80:80 \
 -p 443:443 \
 -v /home/$USERNAME/docker/containers/nginx-proxy/certs:/etc/nginx/certs:ro \
@@ -95,7 +97,6 @@ docker rm -fv nzbget; docker run -d \
 -v /home/$USERNAME/storage:/storage \
 linuxserver/nzbget
 
-#-v /home/$USERNAME/mount/clusterbox_ocaml:/clusterbox_ocaml \
 
 
 echo "Starting Plex Container..."
@@ -109,14 +110,14 @@ docker rm -fv plex; docker run -d \
 -p 1900:1900/udp \
 -e PLEX_UID=$USERID -e PLEX_GID=$GROUPID \
 -e PUID=$USERID -e PGID=$GROUPID \
--e TZ="America/Los Angeles" \
+-e TZ="$TIMEZONE" \
 -v /home/$USERNAME/docker/containers/plex/config:/config \
 -v /home/$USERNAME/docker/containers/plex/transcode:/transcode \
 -v /home/$USERNAME/storage:/data \
 -e VIRTUAL_PORT=32400 \
--e VIRTUAL_HOST=plex.clusterbox.net \
--e LETSENCRYPT_HOST=plex.clusterbox.net \
--e LETSENCRYPT_EMAIL=clusterbox@clusterbox.net \
+-e VIRTUAL_HOST=plex.$DOMAIN \
+-e LETSENCRYPT_HOST=plex.$DOMAIN \
+-e LETSENCRYPT_EMAIL=$EMAIL \
 -e HTTPS_METHOD=noredirect \
 plexinc/pms-docker:plexpass
 
@@ -149,7 +150,7 @@ docker rm -fv jackett; docker run -d \
 -v /home/$USERNAME/docker/containers/jackett/config:/config \
 -v /home/$USERNAME/docker/containers/jackett/blackhole:/downloads \
 -e PUID=$USERID -e PGID=$GROUPID \
--e TZ="America/Los Angeles" \
+-e TZ="$TIMEZONE" \
 -v /etc/localtime:/etc/localtime:ro \
 -p 127.0.0.1:9117:9117 \
 linuxserver/jackett
@@ -179,7 +180,7 @@ docker rm -fv hydra; docker run -d \
 -v /home/$USERNAME/docker/containers/hydra/config:/config \
 -v /home/$USERNAME/docker/containers/hydra/downloads:/downloads \
 -e PGID=$GROUPID -e PUID=$USERID \
--e TZ="America/Los Angeles" \
+-e TZ="$TIMEZONE" \
 -p 127.0.0.1:5075:5075 \
 linuxserver/hydra
 
@@ -213,7 +214,7 @@ docker rm -fv radarr; docker run -d \
 -v /home/$USERNAME/downloads/transmission:/data \
 -v /home/$USERNAME/scripts:/scripts \
 -e PUID=$USERID -e PGID=$GROUPID \
--e TZ="America/Los Angeles" \
+-e TZ="$TIMEZONE" \
 -p 127.0.0.1:7878:7878 \
 linuxserver/radarr
 
@@ -252,22 +253,6 @@ docker rm -fv sonarr; docker run -d \
 linuxserver/sonarr
 
 
-#echo "Starting Ombi V2..."
-#docker rm -fv ombi; docker run -d \
-#--name=ombi \
-#--link radarr:radarr \
-#--link sonarr:sonarr \
-#--link plex:plex \
-#-v /etc/localtime:/etc/localtime:ro \
-#-v /home/$USERNAME/docker/containers/ombi/v2/config:/config \
-#-e PUID=$USERID -e PGID=$GROUPID \
-#-e TZ="America/Los Angeles" \
-#-p 127.0.0.1:3579:3579 \
-#linuxserver/ombi
-
-
-
-
 echo "Starting Ombi V3..."
 docker rm -fv ombi; docker run -d \
 --name=ombi \
@@ -277,7 +262,7 @@ docker rm -fv ombi; docker run -d \
 -v /etc/localtime:/etc/localtime:ro \
 -v /home/$USERNAME/docker/containers/ombi/v3/config:/config \
 -e PUID=$USERID -e PGID=$GROUPID \
--e TZ="America/Los Angeles" \
+-e TZ="$TIMEZONE" \
 -p 127.0.0.1:3579:3579 \
 lsiodev/ombi-preview
 
@@ -353,24 +338,16 @@ docker rm -fv harvester; docker run -d \
 blacklabelops/logio harvester
 
 
-
-#echo "Starting Wetty Terminal..."
-#docker rm -fv term; docker run -d \
-#--name term \
-#-p 127.0.0.1:3000:3000 \
-#-dt krishnasrinivas/wetty
-
-
 echo "Starting Netdata..."
 docker rm -fv netdata; docker run -d --cap-add SYS_PTRACE \
 --name=netdata \
 -v /proc:/host/proc:ro \
 -v /sys:/host/sys:ro \
 -v /var/run/docker.sock:/var/run/docker.sock \
+-v /home/$USERNAME/docker/containers/netdata/config:/etc/netdata \
 -p 127.0.0.1:1999:1999 \
 firehol/netdata:latest
 
-#-v /home/$USERNAME/docker/containers/netdata/config:/etc/netdata \
 
 echo "Starting Duplicati..."
 docker rm -fv duplicati; docker run -d \
@@ -389,9 +366,9 @@ docker rm -fv owncloud; docker run -d \
 -v /home/$USERNAME/docker/containers/owncloud/config:/var/www/html/config \
 -v /home/$USERNAME/docker/containers/owncloud/data:/var/www/html/data \
 -e PUID=$USERID -e PGID=$GROUPID \
--e VIRTUAL_HOST=owncloud.clusterbox.net \
--e LETSENCRYPT_HOST=owncloud.clusterbox.net \
--e LETSENCRYPT_EMAIL=clusterbox@clusterbox.net \
+-e VIRTUAL_HOST=owncloud.$DOMAIN \
+-e LETSENCRYPT_HOST=owncloud.$DOMAIN \
+-e LETSENCRYPT_EMAIL=$EMAIL \
 -e HTTPS_METHOD=noredirect \
 -p 127.0.0.1:8201:80 \
 owncloud:latest
@@ -416,14 +393,12 @@ docker rm -fv organizr; docker run -d \
 --link owncloud:owncloud \
 -v /home/$USERNAME/docker/containers/organizr/config:/config \
 -e PUID=$USERID -e PGID=$GROUPID \
--e VIRTUAL_HOST=portal.clusterbox.net \
--e LETSENCRYPT_HOST=portal.clusterbox.net \
--e LETSENCRYPT_EMAIL=clusterbox@clusterbox.net \
+-e VIRTUAL_HOST=portal.$DOMAIN \
+-e LETSENCRYPT_HOST=portal.$DOMAIN \
+-e LETSENCRYPT_EMAIL=$EMAIL \
 -e HTTPS_METHOD=noredirect \
 -p 127.0.0.1:29999:29999 \
 lsiocommunity/organizr
-
-#--link term:term \
 
 
 echo "MODIFICATION: Installing jsonrpclib-pelix in PlexPy Container"
@@ -431,7 +406,6 @@ docker exec -it plexpy pip install jsonrpclib-pelix
 
 
 echo "MODIFICATION: Disabling SAMEORIGIN header for OwnCloud..."
-#sudo sed -i '/SAMEORIGIN/s/^/#/g' /home/cbuser/docker/containers/owncloud/lib/private/legacy/response.php
 docker exec -it owncloud sed -i '/SAMEORIGIN/s/^/#/g' /var/www/html/lib/private/legacy/response.php
 
 

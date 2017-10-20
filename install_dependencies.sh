@@ -100,4 +100,3 @@ echo "Installing Nano..."
 sudo apt-get install nano
 
 exit
-

@@ -58,7 +58,7 @@ nohup \
 plexdrive mount \
 -o allow_other \
 -v 3 \
---root-node-id="0B9A6oZoGph2mZHhKdW42TzA1d0U" \
+--root-node-id=$PLEXDRIVEROOTNODE \
 --uid=$USERID \
 --gid=$GROUPID \
 /home/$USERNAME/mount/.plexdrive > /home/$USERNAME/config/plexdrive/logs/plexdrive.log &
@@ -71,30 +71,12 @@ sleep 3s
 #Mount encryption over these folders
 echo "mount.sh:  Encrypting all hidden directories..."
 
-#ENCFS6_CONFIG='/home/'$USERNAME'/config/encfs/encfs.xml' \
-#nohup encfs \
-#-o allow_other \
-#--extpass="cat /home/"$USERNAME"/config/encfs/encfspass" \
-#-f -v \
-#/home/$USERNAME/mount/.plexdrive /home/$USERNAME/mount/plexdrive \
-#2> /home/$USERNAME/config/encfs/logs/plexdrive_crypt.error 1> /home/$USERNAME/config/encfs/logs/plexdrive_crypt.log &
-
 ENCFS6_CONFIG='/home/'$USERNAME'/config/encfs/encfs.xml' \
 encfs \
 -o allow_other \
 --extpass="cat /home/"$USERNAME"/config/encfs/encfspass" \
 /home/$USERNAME/mount/.plexdrive /home/$USERNAME/mount/plexdrive \
 
-
-
-
-#ENCFS6_CONFIG='/home/'$USERNAME'/config/encfs/encfs.xml' \
-#nohup encfs \
-#-o allow_other \
-#--extpass="cat /home/"$USERNAME"/config/encfs/encfspass" \
-#-f -v \
-#/home/$USERNAME/mount/.local /home/$USERNAME/mount/local \
-#2> /home/$USERNAME/config/encfs/logs/local_crypt.error 1> /home/$USERNAME/config/encfs/logs/local_crypt.log &
 
 ENCFS6_CONFIG='/home/'$USERNAME'/config/encfs/encfs.xml' \
 encfs \
