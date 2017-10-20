@@ -1,9 +1,6 @@
 #!/bin/sh
- 
-USERNAME="$(id -un)"
-USERID="$(id -u)"
-GROUPID="$(id -g)"
 
+source ~/config/variables.sh 
 
 #Unmount any directories already mounted
 echo "mount.sh:  Unmounting all rsync and encrypted directories..."
@@ -21,6 +18,8 @@ sudo umount -l /home/$USERNAME/mount/.local
 
 sudo /bin/fusermount -uz /home/$USERNAME/storage
 sudo umount -l /home/$USERNAME/storage
+
+sudo /bin/fusermount -uz /home/$USERNAME/mount/clusterbox_ocaml
 echo "Wating 3s...."
 sleep 3s
 
@@ -126,4 +125,11 @@ mkdir -p /home/$USERNAME/mount/local/movies
 
 sudo chown -R $USERNAME:$USERNAME /home/$USERNAME/mount/local
 echo "mount.sh:  Mount.sh Done..."
+
+
+
+##Mounting Google Drive as OCAML too.  We use this as a generic dropbox
+echo "mounth.sh google-drive-ocamlfuse mounting..."
+google-drive-ocamlfuse -label clusterbox_OCAML /home/$USERNAME/mount/clusterbox_ocaml/
+
 exit

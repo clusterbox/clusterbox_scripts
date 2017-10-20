@@ -6,14 +6,7 @@
 #Source instructions for Dockerizing Clusterbox
 #https://zackreed.me/docker-how-and-why-i-use-it/
 
-USERNAME="$(id -un)"
-USERID="$(id -u)"
-GROUPID="$(id -g)"
-KEEPMOUNTS=false
-ENCRYPTEDMOVIEFOLDER=IepOejn11g4nP5JHvRa6GShx
-ENCRYPTEDTVFOLDER=jCAtPeFmvjtPrlSeYLx5G2kd
-RCLONEDEST="gdrive_clusterboxcloud:cb"
-
+source ~/config/variables.sh
 
 echo "Stopping and removing all docker containers..."
 docker rm -f $(docker ps -a -q)
@@ -69,7 +62,7 @@ sudo mkdir -p /usr/share/nginx/html
 echo "Starting Nginx Proxy Container..."
 docker rm -fv nginx-proxy; docker run -d \
 --name=nginx-proxy \
--e DEFAULT_HOST=portal.clusterboxcloud.com \
+-e DEFAULT_HOST=portal.clusterbox.net \
 -p 80:80 \
 -p 443:443 \
 -v /home/$USERNAME/docker/containers/nginx-proxy/certs:/etc/nginx/certs:ro \
@@ -98,9 +91,11 @@ docker rm -fv nzbget; docker run -d \
 -e PUID=$USERID -e PGID=$GROUPID \
 -v /home/$USERNAME/docker/containers/nzbget/config:/config \
 -v /home/$USERNAME/downloads/nzbget:/downloads \
+-v /home/$USERNAME/mount:/mount \
 -v /home/$USERNAME/storage:/storage \
 linuxserver/nzbget
 
+#-v /home/$USERNAME/mount/clusterbox_ocaml:/clusterbox_ocaml \
 
 
 echo "Starting Plex Container..."
@@ -118,8 +113,11 @@ docker rm -fv plex; docker run -d \
 -v /home/$USERNAME/docker/containers/plex/config:/config \
 -v /home/$USERNAME/docker/containers/plex/transcode:/transcode \
 -v /home/$USERNAME/storage:/data \
--e VIRTUAL_HOST=plex.clusterboxcloud.com \
 -e VIRTUAL_PORT=32400 \
+-e VIRTUAL_HOST=plex.clusterbox.net \
+-e LETSENCRYPT_HOST=plex.clusterbox.net \
+-e LETSENCRYPT_EMAIL=clusterbox@clusterbox.net \
+-e HTTPS_METHOD=noredirect \
 plexinc/pms-docker:plexpass
 
 
@@ -164,12 +162,14 @@ docker rm -fv transmission; docker run -d --cap-add=NET_ADMIN --device=/dev/net/
 --dns=8.8.8.8 \
 --dns=8.8.8.4 \
 -v /home/$USERNAME/downloads/transmission:/data \
+-v /home/$USERNAME/mount:/mount \
 -v /etc/localtime:/etc/localtime:ro \
 -e PUID=$USERID -e PGID=$GROUPID \
 --env-file /home/$USERNAME/docker/containers/transmission/config/DockerEnv \
 -p 127.0.0.1:9091:9091 \
 haugene/transmission-openvpn
 
+#-v /home/$USERNAME/mount/clusterbox_ocaml:/clusterbox_ocaml \
 
 echo "Starting NZB Hydra..."
 docker rm -fv hydra; docker run -d \
@@ -389,9 +389,9 @@ docker rm -fv owncloud; docker run -d \
 -v /home/$USERNAME/docker/containers/owncloud/config:/var/www/html/config \
 -v /home/$USERNAME/docker/containers/owncloud/data:/var/www/html/data \
 -e PUID=$USERID -e PGID=$GROUPID \
--e VIRTUAL_HOST=owncloud.clusterboxcloud.com \
--e LETSENCRYPT_HOST=owncloud.clusterboxcloud.com \
--e LETSENCRYPT_EMAIL=clusterbox@clusterboxcloud.com \
+-e VIRTUAL_HOST=owncloud.clusterbox.net \
+-e LETSENCRYPT_HOST=owncloud.clusterbox.net \
+-e LETSENCRYPT_EMAIL=clusterbox@clusterbox.net \
 -e HTTPS_METHOD=noredirect \
 -p 127.0.0.1:8201:80 \
 owncloud:latest
@@ -416,9 +416,9 @@ docker rm -fv organizr; docker run -d \
 --link owncloud:owncloud \
 -v /home/$USERNAME/docker/containers/organizr/config:/config \
 -e PUID=$USERID -e PGID=$GROUPID \
--e VIRTUAL_HOST=portal.clusterboxcloud.com \
--e LETSENCRYPT_HOST=portal.clusterboxcloud.com \
--e LETSENCRYPT_EMAIL=clusterbox@clusterboxcloud.com \
+-e VIRTUAL_HOST=portal.clusterbox.net \
+-e LETSENCRYPT_HOST=portal.clusterbox.net \
+-e LETSENCRYPT_EMAIL=clusterbox@clusterbox.net \
 -e HTTPS_METHOD=noredirect \
 -p 127.0.0.1:29999:29999 \
 lsiocommunity/organizr

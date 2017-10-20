@@ -1,9 +1,15 @@
 #!/bin/bash
 
-USER=cbuser
+source ~/config/variables.sh
+
+echo "Adding google-drive-ocamlfuse repository..."
+sudo add-apt-repository ppa:alessandro-strada/ppa
 
 echo "Updating apt-get"
 sudo apt-get -qq update
+
+echo "Installing google-drive-ocamlfuse"
+sudo apt-get install google-drive-ocamlfuse
 
 echo "Installing Docker dependencies..."
 sudo apt-get install -y -qq \
@@ -29,7 +35,7 @@ sudo add-apt-repository \
 
 sudo apt-get install -y docker.io
 sudo groupadd docker
-sudo usermod -aG docker $USER
+sudo usermod -aG docker $USERNAME
 
 echo "Installing Unzip..."
 
@@ -49,11 +55,11 @@ sudo apt-get install speedtest-cli
 
 echo "Installing rSync..."
 
-mkdir /home/$USER/tmp
-wget http://downloads.rclone.org/rclone-current-linux-amd64.zip -P /home/$USER/tmp
-cd /home/$USER/tmp
+mkdir /home/$USERNAME/tmp
+wget http://downloads.rclone.org/rclone-current-linux-amd64.zip -P /home/$USERNAME/tmp
+cd /home/$USERNAME/tmp
 unzip -o rclone-current-linux-amd64.zip
-cd /home/$USER/tmp/rclone-*-linux-amd64
+cd /home/$USERNAME/tmp/rclone-*-linux-amd64
 sudo cp rclone /usr/bin/
 sudo chown root:root /usr/bin/rclone
 sudo chmod 755 /usr/bin/rclone
@@ -61,8 +67,8 @@ sudo mkdir -p /usr/local/share/man/man1
 sudo cp rclone.1 /usr/local/share/man/man1/
 sudo mandb
 
-sudo rm /home/$USER/tmp/rclone-current-linux-amd64.zip
-sudo rm -R /home/$USER/tmp
+sudo rm /home/$USERNAME/tmp/rclone-current-linux-amd64.zip
+sudo rm -R /home/$USERNAME/tmp
 
 echo "Installing EncFS Encryption...."
 
@@ -74,15 +80,15 @@ sudo apt-get install -y unionfs-fuse
 
 echo "Installing Plexdrive..."
 
-mkdir /home/$USER/tmp
-wget https://github.com/dweidenfeld/plexdrive/releases/download/5.0.0/plexdrive-linux-amd64 -P /home/$USER/tmp
-cd /home/$USER/tmp
+mkdir /home/$USERNAME/tmp
+wget https://github.com/dweidenfeld/plexdrive/releases/download/5.0.0/plexdrive-linux-amd64 -P /home/$USERNAME/tmp
+cd /home/$USERNAME/tmp
 sudo mv plexdrive-linux-amd64 plexdrive
 sudo mv plexdrive /usr/bin
 sudo chown root:root /usr/bin/plexdrive
 sudo chmod 755 /usr/bin/plexdrive
 
-sudo rm -R /home/$USER/tmp
+sudo rm -R /home/$USERNAME/tmp
 
 echo "Installing nload"
 sudo apt-get install nload
