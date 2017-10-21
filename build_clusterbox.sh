@@ -26,6 +26,7 @@ fi
 
 
 echo "Creating docker container folder structures..."
+mkdir -p /home/$USERNAME/docker/containers/mysql/data
 mkdir -p /home/$USERNAME/docker/containers/nzbget/config
 mkdir -p /home/$USERNAME/docker/containers/plex/config
 mkdir -p /home/$USERNAME/docker/containers/plex/transcode
@@ -47,19 +48,29 @@ mkdir -p /home/$USERNAME/docker/containers/nginx-proxy/certs
 mkdir -p /home/$USERNAME/docker/containers/nginx-proxy/conf.d
 mkdir -p /home/$USERNAME/docker/containers/netdata/config
 mkdir -p /home/$USERNAME/docker/containers/duplicati/config
-mkdir -p /home/$USERNAME/docker/containers/owncloud/apps
-mkdir -p /home/$USERNAME/docker/containers/owncloud/config
-mkdir -p /home/$USERNAME/docker/containers/owncloud/data
-sudo chown -R $USERNAME:$USERNAME /home/$USERNAME/docker
+mkdir -p /home/$USERNAME/docker/containers/nextcloud
+#sudo chown -R $USERNAME:$USERNAME /home/$USERNAME/docker
 
 mkdir -p /home/$USERNAME/downloads/nzbget/completed/movies
 mkdir -p /home/$USERNAME/downloads/nzbget/completed/tv
 mkdir -p /home/$USERNAME/downloads/transmission
-sudo chown -R $USERNAME:$USERNAME /home/$USERNAME/downloads
+#sudo chown -R $USERNAME:$USERNAME /home/$USERNAME/downloads
 
 sudo mkdir -p /etc/nginx/certs
 sudo touch /etc/nginx/vhost.d
 sudo mkdir -p /usr/share/nginx/html
+
+
+echo "Starting MySQL Server..."
+docker rm -fv mysql; docker run -d \
+--name=mysql \
+-e MYSQL_ROOT_PASSWORD=$MYSQLROOTPASS \
+-e MYSQL_USER=$MYSQLUSER \
+-e MYSQL_PASSWORD=$MYSQLPASS \
+-e MYSQL_DATABASE=$NEXTCLOUDMYSQLDATABASE \
+-v /home/$USERNAME/docker/containers/mysql/data:/var/lib/mysql \
+mysql/mysql-server:latest
+
 
 echo "Starting Nginx Proxy Container..."
 docker rm -fv nginx-proxy; docker run -d \
@@ -359,19 +370,23 @@ docker rm -fv duplicati; docker run -d \
 linuxserver/duplicati:latest
 
 
-echo "Starting OwnCloud..."
-docker rm -fv owncloud; docker run -d \
---name=owncloud \
--v /home/$USERNAME/docker/containers/owncloud/apps:/var/www/html/apps \
--v /home/$USERNAME/docker/containers/owncloud/config:/var/www/html/config \
--v /home/$USERNAME/docker/containers/owncloud/data:/var/www/html/data \
--e PUID=$USERID -e PGID=$GROUPID \
--e VIRTUAL_HOST=owncloud.$DOMAIN \
--e LETSENCRYPT_HOST=owncloud.$DOMAIN \
+#echo "Starting NextCloud..."
+docker rm -fv nextcloud; docker run -d \
+--name=nextcloud \
+-v /home/$USERNAME/docker/containers/nextcloud:/var/www/html \
+--link mysql:mysql \
+-e MYSQL_USER=$MYSQLUSER \
+-e MYSQL_PASSWORD=$MYSQLPASS \
+-e MYSQL_DATABASE=$NEXTCLOUDMYSQLDATABASE \
+-e MYSQL_HOST=$NEXTCLOUDMYSQLHOST \
+-e NEXTCLOUD_ADMIN_USER=$NEXTCLOUDADMINUSER \
+-e NEXTCLOUD_ADMIN_PASSWORD=$NEXTCLOUDADMINPASSWORD \
+-e VIRTUAL_HOST=nextcloud.$DOMAIN \
+-e LETSENCRYPT_HOST=nextcloud.$DOMAIN \
 -e LETSENCRYPT_EMAIL=$EMAIL \
 -e HTTPS_METHOD=noredirect \
--p 127.0.0.1:8201:80 \
-owncloud:latest
+-p 127.0.0.1:8202:80 \
+nextcloud:latest
 
 
 echo "Starting Organizr..."
@@ -390,7 +405,7 @@ docker rm -fv organizr; docker run -d \
 --link netdata:netdata \
 --link hydra:hydra \
 --link duplicati:duplicati \
---link owncloud:owncloud \
+--link nextcloud:nextcloud \
 -v /home/$USERNAME/docker/containers/organizr/config:/config \
 -e PUID=$USERID -e PGID=$GROUPID \
 -e VIRTUAL_HOST=portal.$DOMAIN \
@@ -404,11 +419,8 @@ lsiocommunity/organizr
 echo "MODIFICATION: Installing jsonrpclib-pelix in PlexPy Container"
 docker exec -it plexpy pip install jsonrpclib-pelix
 
-
-echo "MODIFICATION: Disabling SAMEORIGIN header for OwnCloud..."
-docker exec -it owncloud sed -i '/SAMEORIGIN/s/^/#/g' /var/www/html/lib/private/legacy/response.php
-
+echo "MODIFICATION: Disabling SAMEORIGIN header for NextCloud..."
+docker exec -it nextcloud sed -i '/SAMEORIGIN/s/^/#/g' /var/www/html/lib/private/legacy/response.php
 
 echo "******** ClusterBox Build Complete ********"
-
 exit

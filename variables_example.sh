@@ -5,6 +5,7 @@
 USERNAME="$(id -un)" #automatically grab username, dont change
 USERID="$(id -u)" #automatically grab user id, don't change
 GROUPID="$(id -g)" #automatically grab user group, don't change
+MYSQLPASS="your_mysql_pw" #MySQL password
 KEEPMOUNTS=false #if false, build_clusterbox.sh will always remove and re-create the plexdrive mount
 ENCRYPTEDMOVIEFOLDER="xxxxxxxxx" #encfs encrypted movie folder
 ENCRYPTEDTVFOLDER="yyyyyyyyy" #encfs encrypted tv folder
