@@ -1,4 +1,4 @@
-#!/bin/sh
+!/bin/sh
 
 #Source instructions for rClone implementation
 #https://enztv.wordpress.com/2016/10/19/using-amazon-cloud-drive-with-plex-media-server-and-encrypting-it/
@@ -46,6 +46,8 @@ mkdir -p /home/$USERNAME/docker/containers/rclone.movie/logs
 mkdir -p /home/$USERNAME/docker/containers/rclone.tv/logs
 mkdir -p /home/$USERNAME/docker/containers/nginx-proxy/certs
 mkdir -p /home/$USERNAME/docker/containers/nginx-proxy/conf.d
+mkdir -p /home/$USERNAME/docker/containers/nginx-proxy/vhost.d
+mkdir -p /home/$USERNAME/docker/containers/nginx-proxy/html
 mkdir -p /home/$USERNAME/docker/containers/netdata/config
 mkdir -p /home/$USERNAME/docker/containers/duplicati/config
 mkdir -p /home/$USERNAME/docker/containers/nextcloud
@@ -56,9 +58,9 @@ mkdir -p /home/$USERNAME/downloads/nzbget/completed/tv
 mkdir -p /home/$USERNAME/downloads/transmission
 #sudo chown -R $USERNAME:$USERNAME /home/$USERNAME/downloads
 
-sudo mkdir -p /etc/nginx/certs
-sudo touch /etc/nginx/vhost.d
-sudo mkdir -p /usr/share/nginx/html
+#sudo mkdir -p /etc/nginx/certs
+#sudo touch /etc/nginx/vhost.d
+#sudo mkdir -p /usr/share/nginx/html
 
 
 echo "Starting MySQL Server..."
@@ -80,8 +82,8 @@ docker rm -fv nginx-proxy; docker run -d \
 -p 443:443 \
 -v /home/$USERNAME/docker/containers/nginx-proxy/certs:/etc/nginx/certs:ro \
 -v /home/$USERNAME/docker/containers/nginx-proxy/conf.d:/etc/nginx/conf.d \
--v /etc/nginx/vhost.d \
--v /usr/share/nginx/html \
+-v /home/$USERNAME/docker/containers/nginx-proxy/vhost.d:/etc/nginx/vhost.d \
+-v /home/$USERNAME/docker/containers/nginx-proxy/html:/usr/share/nginx/html \
 -v /var/run/docker.sock:/tmp/docker.sock:ro \
 --label com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy \
 jwilder/nginx-proxy:alpine
@@ -226,6 +228,10 @@ docker rm -fv radarr; docker run -d \
 -v /home/$USERNAME/scripts:/scripts \
 -e PUID=$USERID -e PGID=$GROUPID \
 -e TZ="$TIMEZONE" \
+-e VIRTUAL_HOST=radarr.$DOMAIN \
+-e LETSENCRYPT_HOST=radarr.$DOMAIN \
+-e LETSENCRYPT_EMAIL=$EMAIL \
+-e HTTPS_METHOD=noredirect \
 -p 127.0.0.1:7878:7878 \
 linuxserver/radarr
 
@@ -253,6 +259,10 @@ docker rm -fv sonarr; docker run -d \
 --link nzbget:nzbget \
 --link hydra:hydra \
 --link plex:plex \
+-e VIRTUAL_HOST=sonarr.$DOMAIN \
+-e LETSENCRYPT_HOST=sonarr.$DOMAIN \
+-e LETSENCRYPT_EMAIL=$EMAIL \
+-e HTTPS_METHOD=noredirect \
 -p 127.0.0.1:8989:8989 \
 -e PUID=$USERID -e PGID=$GROUPID \
 -v /etc/localtime:/etc/localtime:ro \
