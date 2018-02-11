@@ -181,7 +181,8 @@ docker rm -fv transmission; docker run -d --cap-add=NET_ADMIN --device=/dev/net/
 -e PUID=$USERID -e PGID=$GROUPID \
 --env-file /home/$USERNAME/docker/containers/transmission/config/DockerEnv \
 -p 127.0.0.1:9091:9091 \
-haugene/transmission-openvpn
+haugene/transmission-openvpn:dev
+# Moved over to DEV tag because of this issue: https://github.com/haugene/docker-transmission-openvpn/issues/426#issuecomment-364693586
 
 #-v /home/$USERNAME/mount/clusterbox_ocaml:/clusterbox_ocaml \
 
